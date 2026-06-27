@@ -7,6 +7,15 @@ from pathlib import Path
 
 from metricdrive import __version__
 from metricdrive.demo import built_in_demo_scenario, ranked_demo_scores
+from metricdrive.io import load_scenarios, save_scenarios
+from metricdrive.report import generate_milestone_report, json_scores, markdown_scores
+from metricdrive.samples import synthetic_scenarios
+from metricdrive.visualize import scenario_svg
+
+
+DEFAULT_SYNTHETIC_OUTPUT = "data/processed/synthetic_scenarios.json"
+DEFAULT_REPORT_OUTPUT = "docs/reports/milestone_1.md"
+DEFAULT_REPORT_ASSETS = "docs/reports/assets"
 
 
 def demo(output_format: str) -> int:
@@ -41,6 +50,65 @@ def spec() -> int:
     return 0
 
 
+def generate(output_path: str) -> int:
+    scenarios = synthetic_scenarios()
+    save_scenarios(output_path, scenarios)
+    print(f"Generated {len(scenarios)} synthetic scenario(s) at {output_path}")
+    return 0
+
+
+def _load_or_synthetic(input_path: str | None):
+    if input_path:
+        return load_scenarios(input_path)
+    return synthetic_scenarios()
+
+
+def score(input_path: str | None, output_format: str) -> int:
+    scenarios = _load_or_synthetic(input_path)
+    if output_format == "json":
+        print(json_scores(scenarios), end="")
+    else:
+        print(markdown_scores(scenarios), end="")
+    return 0
+
+
+def render(
+    scenario_id: str,
+    output_path: str | None,
+    input_path: str | None,
+) -> int:
+    scenarios = _load_or_synthetic(input_path)
+    scenario = _scenario_by_id(scenarios, scenario_id)
+    svg = scenario_svg(scenario)
+    if output_path:
+        target = Path(output_path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(svg, encoding="utf-8")
+        print(f"Rendered {scenario_id} to {output_path}")
+    else:
+        print(svg, end="")
+    return 0
+
+
+def report(output_path: str, assets_dir: str, input_path: str | None) -> int:
+    scenarios = _load_or_synthetic(input_path)
+    generate_milestone_report(
+        scenarios=scenarios,
+        output_path=output_path,
+        assets_dir=assets_dir,
+    )
+    print(f"Generated Milestone 1 report at {output_path}")
+    return 0
+
+
+def _scenario_by_id(scenarios, scenario_id: str):
+    for scenario in scenarios:
+        if scenario.scenario_id == scenario_id:
+            return scenario
+    valid_ids = ", ".join(scenario.scenario_id for scenario in scenarios)
+    raise SystemExit(f"Unknown scenario id: {scenario_id}. Valid ids: {valid_ids}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         prog="metricdrive",
@@ -65,11 +133,88 @@ def main() -> int:
         help="Print the research spec.",
     )
 
+    generate_parser = subparsers.add_parser(
+        "generate",
+        help="Generate synthetic long-tail scenarios.",
+    )
+    generate_parser.add_argument(
+        "--output",
+        default=DEFAULT_SYNTHETIC_OUTPUT,
+        help="Scenario JSON path to write.",
+    )
+
+    score_parser = subparsers.add_parser(
+        "score",
+        help="Score trajectory candidates for synthetic or saved scenarios.",
+    )
+    score_parser.add_argument(
+        "--input",
+        help="Scenario JSON path. Defaults to built-in synthetic scenarios.",
+    )
+    score_parser.add_argument(
+        "--format",
+        choices=("markdown", "json"),
+        default="markdown",
+        help="Output format.",
+    )
+
+    render_parser = subparsers.add_parser(
+        "render",
+        help="Render one scenario as SVG.",
+    )
+    render_parser.add_argument(
+        "scenario_id",
+        help="Scenario id to render.",
+    )
+    render_parser.add_argument(
+        "--input",
+        help="Scenario JSON path. Defaults to built-in synthetic scenarios.",
+    )
+    render_parser.add_argument(
+        "--output",
+        help="SVG path to write. Defaults to stdout.",
+    )
+
+    report_parser = subparsers.add_parser(
+        "report",
+        help="Generate the Milestone 1 Markdown report and SVG assets.",
+    )
+    report_parser.add_argument(
+        "--input",
+        help="Scenario JSON path. Defaults to built-in synthetic scenarios.",
+    )
+    report_parser.add_argument(
+        "--output",
+        default=DEFAULT_REPORT_OUTPUT,
+        help="Markdown report path to write.",
+    )
+    report_parser.add_argument(
+        "--assets-dir",
+        default=DEFAULT_REPORT_ASSETS,
+        help="Directory for generated SVG assets.",
+    )
+
     args = parser.parse_args()
     if args.command == "demo":
         return demo(output_format=args.format)
     if args.command == "spec":
         return spec()
+    if args.command == "generate":
+        return generate(output_path=args.output)
+    if args.command == "score":
+        return score(input_path=args.input, output_format=args.format)
+    if args.command == "render":
+        return render(
+            scenario_id=args.scenario_id,
+            output_path=args.output,
+            input_path=args.input,
+        )
+    if args.command == "report":
+        return report(
+            output_path=args.output,
+            assets_dir=args.assets_dir,
+            input_path=args.input,
+        )
 
     parser.print_help()
     return 0

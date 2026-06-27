@@ -7,7 +7,7 @@
 - Add minimal package, CLI, and CI.
 - Keep project claims honest and reproducible.
 
-Status: in progress.
+Status: implemented.
 
 ## Milestone 1: Synthetic Scenario Core
 
@@ -16,6 +16,10 @@ Status: in progress.
 - Render bird's-eye-view scenes.
 - Implement first planning metrics.
 - Produce a report with metric-ranked candidate trajectories.
+
+Status: implemented for six synthetic long-tail scenario families, transparent
+metric ranking, SVG scene rendering, JSON export/load, and a generated
+Milestone 1 report.
 
 ## Milestone 2: Baseline Planners
 

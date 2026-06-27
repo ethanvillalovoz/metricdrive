@@ -32,7 +32,7 @@ planning-alignment loop:
 
 ## Current Status
 
-Planning and scaffold phase.
+Milestone 1 synthetic scenario core.
 
 The repository currently includes:
 
@@ -41,10 +41,17 @@ The repository currently includes:
 - a staged roadmap,
 - data and reproducibility policy,
 - a tiny standard-library demo of metric-scored trajectory candidates,
+- six synthetic long-tail driving scenario families,
+- transparent planning metrics and candidate ranking,
+- SVG bird's-eye-view scenario rendering,
+- a generated Milestone 1 report,
 - CI for the initial Python package.
 
-The first implementation milestone is a synthetic long-tail scenario generator,
-BEV renderer, imitation baseline, and metric-reranking baseline.
+The next implementation milestone is the imitation baseline and metric-reranking
+baseline built on top of this evaluation harness.
+
+See [docs/reports/milestone_1.md](docs/reports/milestone_1.md) for the current
+scenario gallery and score tables.
 
 ## Quick Start
 
@@ -60,22 +67,51 @@ The demo prints a small trajectory-ranking example using collision, progress,
 comfort, and vulnerable-road-user clearance terms. It is a smoke test for the
 evaluation vocabulary, not the final planner.
 
+## Milestone 1 Commands
+
+Generate the controlled synthetic scenario set:
+
+```bash
+metricdrive generate --output data/processed/synthetic_scenarios.json
+```
+
+Score built-in or saved scenarios:
+
+```bash
+metricdrive score
+metricdrive score --input data/processed/synthetic_scenarios.json --format json
+```
+
+Render one scenario as SVG:
+
+```bash
+metricdrive render synthetic_pedestrian_crossing --output outputs/pedestrian_crossing.svg
+```
+
+Generate the first milestone report and SVG gallery:
+
+```bash
+metricdrive report --output docs/reports/milestone_1.md --assets-dir docs/reports/assets
+```
+
 ## Research Plan
 
 See [docs/research_spec.md](docs/research_spec.md) for the one-page plan.
 
 The intended experimental ladder:
 
-1. **Imitation baseline**: train a planner to match reference future
+1. **Synthetic scenario core**: define scenarios, metrics, SVG rendering, and
+   report generation.
+2. **Imitation baseline**: train a planner to match reference future
    trajectories.
-2. **Metric reranking**: sample candidate trajectories and choose the best one
+3. **Metric reranking**: sample candidate trajectories and choose the best one
    under planning metrics.
-3. **Preference alignment**: create metric-derived preference pairs and train a
+4. **Preference alignment**: create metric-derived preference pairs and train a
    planner or reward model to prefer safer candidates.
-4. **Verifiable meta-actions**: add intermediate actions such as
+5. **Verifiable meta-actions**: add intermediate actions such as
    `YIELD_TO_VRU`, `SLOW_FOR_CUT_IN`, and `NUDGE_AROUND_OBSTACLE`, then verify
    them against trajectory metrics.
-5. **Public-data integration**: add optional Waymo Open Motion / Waymax or
+6. **Public-data integration**: add optional Waymo Open Motion / Waymax or
    other public benchmark slices without requiring heavy downloads for the
    default demo.
 
