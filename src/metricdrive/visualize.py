@@ -77,6 +77,93 @@ def scenario_svg(scenario: Scenario, width: int = 900, height: int = 460) -> str
     return "\n".join(parts) + "\n"
 
 
+def planner_comparison_svg(
+    scenario: Scenario,
+    selected_trajectories: dict[str, Trajectory],
+    width: int = 900,
+    height: int = 460,
+) -> str:
+    """Render selected planner trajectories for one scenario."""
+
+    margin = 42
+    bounds = scenario.drivable_area
+    colors = {
+        "reference_imitation": "#2563eb",
+        "progress_only": "#dc2626",
+        "metric_rerank": "#0f766e",
+    }
+    labels = {
+        "reference_imitation": "reference imitation",
+        "progress_only": "progress only",
+        "metric_rerank": "metric rerank",
+    }
+
+    def project(point: Point) -> tuple[float, float]:
+        x = margin + (point.x - bounds.min_x) / (bounds.max_x - bounds.min_x) * (
+            width - margin * 2
+        )
+        y = height - margin - (point.y - bounds.min_y) / (bounds.max_y - bounds.min_y) * (
+            height - margin * 2
+        )
+        return x, y
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="{escape(scenario.title)} planner comparison">',
+        "<style>",
+        "text{font-family:Arial,Helvetica,sans-serif;fill:#0f172a}",
+        ".small{font-size:13px}.label{font-size:14px;font-weight:700}",
+        ".road{fill:#f8fafc;stroke:#94a3b8;stroke-width:2}",
+        ".grid{stroke:#e2e8f0;stroke-width:1}",
+        "</style>",
+        '<rect width="100%" height="100%" fill="#ffffff"/>',
+        _rect_svg(bounds, project, css_class="road"),
+        f'<text x="{margin}" y="26" class="label">{escape(scenario.title)}</text>',
+        f'<text x="{margin}" y="44" class="small">planner benchmark</text>',
+    ]
+
+    parts.extend(_grid_svg(bounds, project))
+    for planner_id, trajectory in selected_trajectories.items():
+        parts.append(
+            _trajectory_svg(
+                trajectory,
+                project,
+                colors.get(planner_id, "#64748b"),
+                5 if planner_id == "metric_rerank" else 3,
+                "5 5" if planner_id != "metric_rerank" else "",
+            )
+        )
+    for agent in scenario.agents:
+        parts.append(
+            _agent_svg(
+                agent,
+                project,
+                {"agent": "#334155", "vru": "#c026d3"},
+            )
+        )
+
+    goal_x, goal_y = project(scenario.route_goal)
+    parts.append(
+        f'<circle cx="{goal_x:.1f}" cy="{goal_y:.1f}" r="7" fill="#facc15" stroke="#854d0e" stroke-width="2"/>'
+    )
+    parts.append(f'<text x="{goal_x + 10:.1f}" y="{goal_y - 10:.1f}" class="small">goal</text>')
+
+    legend_y = height - 18
+    legend_x = 42
+    for planner_id in selected_trajectories:
+        parts.append(
+            _legend_item(
+                legend_x,
+                legend_y,
+                colors.get(planner_id, "#64748b"),
+                labels.get(planner_id, planner_id),
+            )
+        )
+        legend_x += 170
+    parts.append(_legend_item(legend_x, legend_y, "#c026d3", "VRU"))
+    parts.append("</svg>")
+    return "\n".join(parts) + "\n"
+
+
 def _rect_svg(
     rect: Rect,
     project: callable,

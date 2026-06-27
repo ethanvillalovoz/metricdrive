@@ -32,7 +32,7 @@ planning-alignment loop:
 
 ## Current Status
 
-Milestone 1 synthetic scenario core.
+Milestone 2 baseline planner benchmark.
 
 The repository currently includes:
 
@@ -45,13 +45,18 @@ The repository currently includes:
 - transparent planning metrics and candidate ranking,
 - SVG bird's-eye-view scenario rendering,
 - a generated Milestone 1 report,
+- reference imitation, progress-only, and metric-rerank planner baselines,
+- aggregate/per-scenario benchmark reporting,
+- a generated Milestone 2 planner comparison report,
 - CI for the initial Python package.
 
-The next implementation milestone is the imitation baseline and metric-reranking
-baseline built on top of this evaluation harness.
+The next implementation milestone is metric-derived preference generation and a
+small learned preference model.
 
 See [docs/reports/milestone_1.md](docs/reports/milestone_1.md) for the current
-scenario gallery and score tables.
+scenario gallery and score tables. See
+[docs/reports/milestone_2.md](docs/reports/milestone_2.md) for the baseline
+planner benchmark.
 
 ## Quick Start
 
@@ -92,6 +97,14 @@ Generate the first milestone report and SVG gallery:
 
 ```bash
 metricdrive report --output docs/reports/milestone_1.md --assets-dir docs/reports/assets
+```
+
+Compare baseline planners:
+
+```bash
+metricdrive benchmark
+metricdrive benchmark --format json
+metricdrive benchmark --report docs/reports/milestone_2.md --assets-dir docs/reports/assets
 ```
 
 ## Research Plan

@@ -28,6 +28,9 @@ Milestone 1 report.
 - Add metric-reranking baseline.
 - Compare aggregate and per-category results.
 
+Status: implemented for reference imitation, progress-only, and metric-rerank
+planner baselines with aggregate/per-scenario benchmark reporting.
+
 ## Milestone 3: Preference Alignment
 
 - Generate metric-derived preference pairs.

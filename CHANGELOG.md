@@ -7,3 +7,5 @@
 - Added a tiny standard-library trajectory metric demo and tests.
 - Added Milestone 1 synthetic scenarios, planning metrics, SVG rendering, JSON
   scenario export, and report generation.
+- Added Milestone 2 planner baselines, benchmark summaries, and planner
+  comparison report generation.

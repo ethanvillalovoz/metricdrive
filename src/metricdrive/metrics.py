@@ -95,9 +95,30 @@ def mean_point_error(left: Trajectory, right: Trajectory) -> float:
     paired_points = tuple(zip(left.points, right.points))
     if not paired_points:
         return float("inf")
-    return sum(distance(left_point, right_point) for left_point, right_point in paired_points) / len(
-        paired_points
-    )
+    return sum(
+        distance(left_point, right_point) for left_point, right_point in paired_points
+    ) / len(paired_points)
+
+
+def route_axis_progress(trajectory: Trajectory, goal: Point) -> float:
+    """Return signed progress along the route axis without safety awareness."""
+
+    if not trajectory.points:
+        return 0.0
+
+    start = trajectory.points[0]
+    end = trajectory.points[-1]
+    route_x = goal.x - start.x
+    route_y = goal.y - start.y
+    route_length = hypot(route_x, route_y)
+    if route_length == 0:
+        return 0.0
+
+    unit_x = route_x / route_length
+    unit_y = route_y / route_length
+    displacement_x = end.x - start.x
+    displacement_y = end.y - start.y
+    return (displacement_x * unit_x) + (displacement_y * unit_y)
 
 
 def min_agent_clearance(

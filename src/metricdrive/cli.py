@@ -6,6 +6,12 @@ from dataclasses import asdict
 from pathlib import Path
 
 from metricdrive import __version__
+from metricdrive.benchmark import (
+    generate_benchmark_report,
+    json_benchmark,
+    markdown_benchmark,
+    run_benchmark,
+)
 from metricdrive.demo import built_in_demo_scenario, ranked_demo_scores
 from metricdrive.io import load_scenarios, save_scenarios
 from metricdrive.report import generate_milestone_report, json_scores, markdown_scores
@@ -16,6 +22,7 @@ from metricdrive.visualize import scenario_svg
 DEFAULT_SYNTHETIC_OUTPUT = "data/processed/synthetic_scenarios.json"
 DEFAULT_REPORT_OUTPUT = "docs/reports/milestone_1.md"
 DEFAULT_REPORT_ASSETS = "docs/reports/assets"
+DEFAULT_BENCHMARK_OUTPUT = "docs/reports/milestone_2.md"
 
 
 def demo(output_format: str) -> int:
@@ -98,6 +105,30 @@ def report(output_path: str, assets_dir: str, input_path: str | None) -> int:
         assets_dir=assets_dir,
     )
     print(f"Generated Milestone 1 report at {output_path}")
+    return 0
+
+
+def benchmark(
+    input_path: str | None,
+    output_format: str,
+    report_path: str | None,
+    assets_dir: str,
+) -> int:
+    scenarios = _load_or_synthetic(input_path)
+    if report_path:
+        generate_benchmark_report(
+            scenarios=scenarios,
+            output_path=report_path,
+            assets_dir=assets_dir,
+        )
+        print(f"Generated Milestone 2 benchmark report at {report_path}")
+        return 0
+
+    result = run_benchmark(scenarios)
+    if output_format == "json":
+        print(json_benchmark(result), end="")
+    else:
+        print(markdown_benchmark(result), end="")
     return 0
 
 
@@ -194,6 +225,30 @@ def main() -> int:
         help="Directory for generated SVG assets.",
     )
 
+    benchmark_parser = subparsers.add_parser(
+        "benchmark",
+        help="Compare baseline planners over the scenario set.",
+    )
+    benchmark_parser.add_argument(
+        "--input",
+        help="Scenario JSON path. Defaults to built-in synthetic scenarios.",
+    )
+    benchmark_parser.add_argument(
+        "--format",
+        choices=("markdown", "json"),
+        default="markdown",
+        help="Output format when not writing a report.",
+    )
+    benchmark_parser.add_argument(
+        "--report",
+        help="Optional Markdown report path to write.",
+    )
+    benchmark_parser.add_argument(
+        "--assets-dir",
+        default=DEFAULT_REPORT_ASSETS,
+        help="Directory for generated SVG report assets.",
+    )
+
     args = parser.parse_args()
     if args.command == "demo":
         return demo(output_format=args.format)
@@ -214,6 +269,13 @@ def main() -> int:
             output_path=args.output,
             assets_dir=args.assets_dir,
             input_path=args.input,
+        )
+    if args.command == "benchmark":
+        return benchmark(
+            input_path=args.input,
+            output_format=args.format,
+            report_path=args.report,
+            assets_dir=args.assets_dir,
         )
 
     parser.print_help()
