@@ -47,4 +47,4 @@ Collision clearance is the most brittle single term: removing it leaves 1 unsafe
 
 ## Next Experiment
 
-Generate harder negatives that force tradeoffs between progress, collision clearance, vulnerable-road-user clearance, comfort, and route adherence.
+Use hard negatives to define verifiable meta-actions that force explicit choices between progress, collision clearance, vulnerable-road-user clearance, comfort, and route adherence.

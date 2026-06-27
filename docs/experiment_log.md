@@ -33,3 +33,13 @@ Use this file for short, reproducible experiment notes.
 - Metrics: held-out metric-rerank match rate, unsafe selection count, mean selected metric score, metric-score gap, pairwise preference fit.
 - Result: the full objective matched 6/6 held-out metric-rerank choices with zero unsafe selections; removing collision clearance dropped to 4/6 and produced one unsafe dense-merge selection; progress-only selected unsafe trajectories in 6/6 held-out scenarios; safety-only avoided unsafe choices but matched only 2/6 metric-rerank choices.
 - What changed next: generate harder negatives that force richer tradeoffs between collision clearance, VRU clearance, progress, comfort, and route adherence.
+
+### 2026-06-27 - Hard Negative Stress Test
+
+- Goal: generate tighter trajectory negatives and test whether the learned reward still recovers metric-aligned choices.
+- Command: `metricdrive hard-negatives --report docs/reports/milestone_3_hard_negatives.md`
+- Data: six synthetic scenarios augmented from 18 original candidates to 36 total candidates.
+- Method: add generated progress-pressure, under-commit, and lateral-wobble candidates to every scenario, then regenerate metric-derived preference pairs and rerun learned-model plus ablation evaluation.
+- Metrics: generated unsafe/near-miss counts, preference-pair count, learned pairwise fit, held-out metric-rerank match rate, held-out unsafe selections, and stress-ablation failures.
+- Result: the augmented set produced 90 preference pairs; the learned reward fit 89/90 pairs, matched 6/6 held-out metric-rerank choices, and made zero unsafe held-out selections. On the stressed set, no-collision matched only 2/6 held-out choices with 3 unsafe selections, while progress-only matched 1/6 with 5 unsafe selections.
+- What changed next: define verifiable meta-actions and connect them to generated trajectory candidates plus metric checks.

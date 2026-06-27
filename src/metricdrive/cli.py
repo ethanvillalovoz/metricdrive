@@ -13,6 +13,13 @@ from metricdrive.benchmark import (
     run_benchmark,
 )
 from metricdrive.demo import built_in_demo_scenario, ranked_demo_scores
+from metricdrive.hard_negatives import (
+    DEFAULT_HARD_NEGATIVE_EPOCHS,
+    generate_hard_negative_report,
+    json_hard_negative_experiment,
+    markdown_hard_negative_experiment,
+    run_hard_negative_experiment,
+)
 from metricdrive.io import load_scenarios, save_scenarios
 from metricdrive.learning import (
     generate_ablation_report,
@@ -44,6 +51,7 @@ DEFAULT_PREFERENCES_OUTPUT = "data/processed/preferences.json"
 DEFAULT_PREFERENCES_REPORT = "docs/reports/milestone_3.md"
 DEFAULT_LEARNING_REPORT = "docs/reports/milestone_3_learned_model.md"
 DEFAULT_ABLATION_REPORT = "docs/reports/milestone_3_ablation_study.md"
+DEFAULT_HARD_NEGATIVE_REPORT = "docs/reports/milestone_3_hard_negatives.md"
 
 
 def demo(output_format: str) -> int:
@@ -245,6 +253,40 @@ def ablations(
         print(json_ablation_study(study), end="")
     else:
         print(markdown_ablation_study(study), end="")
+    return 0
+
+
+def hard_negatives(
+    input_path: str | None,
+    output_format: str,
+    report_path: str | None,
+    epochs: int,
+    learning_rate: float,
+    l2: float,
+) -> int:
+    scenarios = _load_or_synthetic(input_path)
+
+    if report_path:
+        generate_hard_negative_report(
+            scenarios=scenarios,
+            output_path=report_path,
+            epochs=epochs,
+            learning_rate=learning_rate,
+            l2=l2,
+        )
+        print(f"Generated hard negative stress report at {report_path}")
+        return 0
+
+    experiment = run_hard_negative_experiment(
+        scenarios=scenarios,
+        epochs=epochs,
+        learning_rate=learning_rate,
+        l2=l2,
+    )
+    if output_format == "json":
+        print(json_hard_negative_experiment(experiment), end="")
+    else:
+        print(markdown_hard_negative_experiment(experiment), end="")
     return 0
 
 
@@ -468,6 +510,43 @@ def main() -> int:
         help="L2 weight decay.",
     )
 
+    hard_negatives_parser = subparsers.add_parser(
+        "hard-negatives",
+        help="Generate and evaluate hard negative trajectory candidates.",
+    )
+    hard_negatives_parser.add_argument(
+        "--input",
+        help="Scenario JSON path. Defaults to built-in synthetic scenarios.",
+    )
+    hard_negatives_parser.add_argument(
+        "--format",
+        choices=("markdown", "json"),
+        default="markdown",
+        help="Output format when not writing a report.",
+    )
+    hard_negatives_parser.add_argument(
+        "--report",
+        help=f"Optional Markdown report path to write, such as {DEFAULT_HARD_NEGATIVE_REPORT}.",
+    )
+    hard_negatives_parser.add_argument(
+        "--epochs",
+        type=int,
+        default=DEFAULT_HARD_NEGATIVE_EPOCHS,
+        help="Preference-training epochs for stress evaluation.",
+    )
+    hard_negatives_parser.add_argument(
+        "--learning-rate",
+        type=float,
+        default=0.2,
+        help="Pairwise logistic learning rate.",
+    )
+    hard_negatives_parser.add_argument(
+        "--l2",
+        type=float,
+        default=0.001,
+        help="L2 weight decay.",
+    )
+
     args = parser.parse_args()
     if args.command == "demo":
         return demo(output_format=args.format)
@@ -515,6 +594,15 @@ def main() -> int:
         )
     if args.command == "ablations":
         return ablations(
+            input_path=args.input,
+            output_format=args.format,
+            report_path=args.report,
+            epochs=args.epochs,
+            learning_rate=args.learning_rate,
+            l2=args.l2,
+        )
+    if args.command == "hard-negatives":
+        return hard_negatives(
             input_path=args.input,
             output_format=args.format,
             report_path=args.report,

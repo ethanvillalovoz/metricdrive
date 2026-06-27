@@ -62,6 +62,15 @@ class CliTests(unittest.TestCase):
         self.assertIn("MetricDrive Objective Ablations", stdout.getvalue())
         self.assertIn("Progress only", stdout.getvalue())
 
+    def test_hard_negatives_outputs_stress_summary(self) -> None:
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            exit_code = main_from_args("hard-negatives", "--epochs", "20")
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("MetricDrive Hard Negative Stress Test", stdout.getvalue())
+        self.assertIn("generated_progress_pressure", stdout.getvalue())
+
 
 def main_from_args(*args: str) -> int:
     import sys

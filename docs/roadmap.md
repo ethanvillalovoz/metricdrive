@@ -39,8 +39,8 @@ planner baselines with aggregate/per-scenario benchmark reporting.
 - Add ablations for metric terms.
 
 Status: preference pair generation, a lightweight learned preference reward
-model, and objective ablations are implemented. Harder generated negatives
-remain next.
+model, objective ablations, and hard-negative stress testing are implemented.
+Verifiable meta-actions remain next.
 
 ## Milestone 4: Verifiable Meta-Actions
 

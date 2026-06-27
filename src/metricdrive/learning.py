@@ -521,7 +521,7 @@ def generate_learning_report(
             "",
             "## Next Experiment",
             "",
-            "Use the objective ablation study to guide harder generated negatives that force richer tradeoffs between safety, progress, comfort, and route adherence.",
+            "Use generated hard negatives to define verifiable meta-actions that connect high-level driving intent to trajectory candidates and metric checks.",
             "",
         )
     )
@@ -600,7 +600,7 @@ def generate_ablation_report(
             "",
             "## Next Experiment",
             "",
-            "Generate harder negatives that force tradeoffs between progress, collision clearance, vulnerable-road-user clearance, comfort, and route adherence.",
+            "Use hard negatives to define verifiable meta-actions that force explicit choices between progress, collision clearance, vulnerable-road-user clearance, comfort, and route adherence.",
             "",
         )
     )

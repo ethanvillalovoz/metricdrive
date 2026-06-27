@@ -56,4 +56,4 @@ The learned preference planner recovers the metric-rerank choices on the control
 
 ## Next Experiment
 
-Use the objective ablation study to guide harder generated negatives that force richer tradeoffs between safety, progress, comfort, and route adherence.
+Use generated hard negatives to define verifiable meta-actions that connect high-level driving intent to trajectory candidates and metric checks.

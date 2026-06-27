@@ -15,3 +15,5 @@
   evaluation, and learned-model report generation.
 - Added Milestone 3C objective ablations for learned reward terms, including
   unsafe-selection and metric-score-gap analysis.
+- Added Milestone 3D hard-negative trajectory generation, augmented preference
+  stress testing, and report generation.

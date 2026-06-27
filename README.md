@@ -32,7 +32,7 @@ planning-alignment loop:
 
 ## Current Status
 
-Milestone 3C objective ablation study.
+Milestone 3D hard negative stress test.
 
 The repository currently includes:
 
@@ -58,10 +58,14 @@ The repository currently includes:
 - objective ablations showing which metric terms prevent unsafe or overly
   cautious selections,
 - a generated Milestone 3C objective ablation report,
+- generated hard-negative trajectory candidates that stress safety/progress
+  tradeoffs,
+- augmented preference-pair stress evaluation over 36 trajectory candidates,
+- a generated Milestone 3D hard negative stress-test report,
 - CI for the initial Python package.
 
-The next implementation milestone is harder generated negatives that stress
-tradeoffs between safety, progress, comfort, and route adherence.
+The next implementation milestone is verifiable meta-actions connected to
+trajectory candidates and metric checks.
 
 See [docs/reports/milestone_1.md](docs/reports/milestone_1.md) for the current
 scenario gallery and score tables. See
@@ -71,7 +75,9 @@ for the metric-derived preference dataset. See
 [docs/reports/milestone_3_learned_model.md](docs/reports/milestone_3_learned_model.md)
 for the learned preference model evaluation. See
 [docs/reports/milestone_3_ablation_study.md](docs/reports/milestone_3_ablation_study.md)
-for the objective ablation study.
+for the objective ablation study. See
+[docs/reports/milestone_3_hard_negatives.md](docs/reports/milestone_3_hard_negatives.md)
+for the hard negative stress test.
 
 ## Quick Start
 
@@ -145,6 +151,14 @@ Run objective ablations:
 metricdrive ablations
 metricdrive ablations --format json
 metricdrive ablations --report docs/reports/milestone_3_ablation_study.md
+```
+
+Generate and evaluate hard negative candidates:
+
+```bash
+metricdrive hard-negatives
+metricdrive hard-negatives --format json
+metricdrive hard-negatives --report docs/reports/milestone_3_hard_negatives.md
 ```
 
 ## Research Plan
