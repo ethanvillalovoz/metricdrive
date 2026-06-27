@@ -11,3 +11,5 @@
   comparison report generation.
 - Added Milestone 3 metric-derived preference pair generation, DPO-style JSON
   export, and preference report generation.
+- Added Milestone 3B learned preference reward modeling, leave-one-scenario-out
+  evaluation, and learned-model report generation.

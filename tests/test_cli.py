@@ -44,6 +44,15 @@ class CliTests(unittest.TestCase):
         self.assertIn("MetricDrive Preference Pairs", stdout.getvalue())
         self.assertIn("metric_aligned_yield", stdout.getvalue())
 
+    def test_learned_outputs_model_summary(self) -> None:
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            exit_code = main_from_args("learned", "--epochs", "80")
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("MetricDrive Learned Preference Model", stdout.getvalue())
+        self.assertIn("Leave-one-scenario-out match rate", stdout.getvalue())
+
 
 def main_from_args(*args: str) -> int:
     import sys

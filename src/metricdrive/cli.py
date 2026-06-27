@@ -14,6 +14,12 @@ from metricdrive.benchmark import (
 )
 from metricdrive.demo import built_in_demo_scenario, ranked_demo_scores
 from metricdrive.io import load_scenarios, save_scenarios
+from metricdrive.learning import (
+    generate_learning_report,
+    json_learning,
+    markdown_learning,
+    run_learning_experiment,
+)
 from metricdrive.preferences import (
     generate_preference_report,
     generate_preferences,
@@ -32,6 +38,7 @@ DEFAULT_REPORT_ASSETS = "docs/reports/assets"
 DEFAULT_BENCHMARK_OUTPUT = "docs/reports/milestone_2.md"
 DEFAULT_PREFERENCES_OUTPUT = "data/processed/preferences.json"
 DEFAULT_PREFERENCES_REPORT = "docs/reports/milestone_3.md"
+DEFAULT_LEARNING_REPORT = "docs/reports/milestone_3_learned_model.md"
 
 
 def demo(output_format: str) -> int:
@@ -165,6 +172,40 @@ def preferences(
         print(json_preferences(pairs), end="")
     else:
         print(markdown_preferences(pairs), end="")
+    return 0
+
+
+def learned(
+    input_path: str | None,
+    output_format: str,
+    report_path: str | None,
+    epochs: int,
+    learning_rate: float,
+    l2: float,
+) -> int:
+    scenarios = _load_or_synthetic(input_path)
+
+    if report_path:
+        generate_learning_report(
+            scenarios=scenarios,
+            output_path=report_path,
+            epochs=epochs,
+            learning_rate=learning_rate,
+            l2=l2,
+        )
+        print(f"Generated learned preference report at {report_path}")
+        return 0
+
+    result = run_learning_experiment(
+        scenarios=scenarios,
+        epochs=epochs,
+        learning_rate=learning_rate,
+        l2=l2,
+    )
+    if output_format == "json":
+        print(json_learning(result), end="")
+    else:
+        print(markdown_learning(result), end="")
     return 0
 
 
@@ -314,6 +355,43 @@ def main() -> int:
         help="Only emit pairs whose preferred score exceeds rejected score by this margin.",
     )
 
+    learned_parser = subparsers.add_parser(
+        "learned",
+        help="Train and evaluate a learned preference reward model.",
+    )
+    learned_parser.add_argument(
+        "--input",
+        help="Scenario JSON path. Defaults to built-in synthetic scenarios.",
+    )
+    learned_parser.add_argument(
+        "--format",
+        choices=("markdown", "json"),
+        default="markdown",
+        help="Output format when not writing a report.",
+    )
+    learned_parser.add_argument(
+        "--report",
+        help=f"Optional Markdown report path to write, such as {DEFAULT_LEARNING_REPORT}.",
+    )
+    learned_parser.add_argument(
+        "--epochs",
+        type=int,
+        default=600,
+        help="Preference-training epochs.",
+    )
+    learned_parser.add_argument(
+        "--learning-rate",
+        type=float,
+        default=0.2,
+        help="Pairwise logistic learning rate.",
+    )
+    learned_parser.add_argument(
+        "--l2",
+        type=float,
+        default=0.001,
+        help="L2 weight decay.",
+    )
+
     args = parser.parse_args()
     if args.command == "demo":
         return demo(output_format=args.format)
@@ -349,6 +427,15 @@ def main() -> int:
             output_path=args.output,
             report_path=args.report,
             min_score_margin=args.min_score_margin,
+        )
+    if args.command == "learned":
+        return learned(
+            input_path=args.input,
+            output_format=args.format,
+            report_path=args.report,
+            epochs=args.epochs,
+            learning_rate=args.learning_rate,
+            l2=args.l2,
         )
 
     parser.print_help()

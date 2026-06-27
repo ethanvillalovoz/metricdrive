@@ -32,7 +32,7 @@ planning-alignment loop:
 
 ## Current Status
 
-Milestone 3 metric-derived preference data.
+Milestone 3B learned preference model.
 
 The repository currently includes:
 
@@ -51,15 +51,22 @@ The repository currently includes:
 - metric-derived preference pairs with score margins, reasons, and DPO-style
   prompt/chosen/rejected records,
 - a generated Milestone 3 preference-data report,
+- a learned preference reward model trained from pairwise trajectory
+  preferences,
+- leave-one-scenario-out learned-model evaluation,
+- a generated Milestone 3B learned preference model report,
 - CI for the initial Python package.
 
-The next implementation milestone is a small learned preference model.
+The next implementation milestone is objective ablations and harder generated
+negatives.
 
 See [docs/reports/milestone_1.md](docs/reports/milestone_1.md) for the current
 scenario gallery and score tables. See
 [docs/reports/milestone_2.md](docs/reports/milestone_2.md) for the baseline
 planner benchmark. See [docs/reports/milestone_3.md](docs/reports/milestone_3.md)
-for the metric-derived preference dataset.
+for the metric-derived preference dataset. See
+[docs/reports/milestone_3_learned_model.md](docs/reports/milestone_3_learned_model.md)
+for the learned preference model evaluation.
 
 ## Quick Start
 
@@ -117,6 +124,14 @@ metricdrive preferences
 metricdrive preferences --format json
 metricdrive preferences --output data/processed/preferences.json
 metricdrive preferences --report docs/reports/milestone_3.md
+```
+
+Train and evaluate the learned preference model:
+
+```bash
+metricdrive learned
+metricdrive learned --format json
+metricdrive learned --report docs/reports/milestone_3_learned_model.md
 ```
 
 ## Research Plan

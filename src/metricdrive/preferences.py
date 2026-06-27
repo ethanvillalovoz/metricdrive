@@ -191,13 +191,13 @@ def generate_preference_report(
 
     lines.extend(
         (
-        "",
-        "## Training Shape",
-        "",
-        "Each JSON pair includes `prompt`, `chosen`, and `rejected` fields, so it can be adapted into a DPO-style preference-tuning row. The current labels are deterministic because they come from transparent metrics, which makes the dataset reproducible and debuggable before introducing learned rewards or policy updates.",
-        "",
-        "## Next Experiment",
-        "",
+            "",
+            "## Training Shape",
+            "",
+            "Each JSON pair includes `prompt`, `chosen`, and `rejected` fields, so it can be adapted into a DPO-style preference-tuning row. The current labels are deterministic because they come from transparent metrics, which makes the dataset reproducible and debuggable before introducing learned rewards or policy updates.",
+            "",
+            "## Next Experiment",
+            "",
             "Train a lightweight preference model that predicts the preferred trajectory from metric-derived pairs, then compare its selections with hard-coded metric reranking.",
             "",
         )
