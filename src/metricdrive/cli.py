@@ -14,6 +14,13 @@ from metricdrive.benchmark import (
 )
 from metricdrive.demo import built_in_demo_scenario, ranked_demo_scores
 from metricdrive.io import load_scenarios, save_scenarios
+from metricdrive.preferences import (
+    generate_preference_report,
+    generate_preferences,
+    json_preferences,
+    markdown_preferences,
+    save_preferences,
+)
 from metricdrive.report import generate_milestone_report, json_scores, markdown_scores
 from metricdrive.samples import synthetic_scenarios
 from metricdrive.visualize import scenario_svg
@@ -23,6 +30,8 @@ DEFAULT_SYNTHETIC_OUTPUT = "data/processed/synthetic_scenarios.json"
 DEFAULT_REPORT_OUTPUT = "docs/reports/milestone_1.md"
 DEFAULT_REPORT_ASSETS = "docs/reports/assets"
 DEFAULT_BENCHMARK_OUTPUT = "docs/reports/milestone_2.md"
+DEFAULT_PREFERENCES_OUTPUT = "data/processed/preferences.json"
+DEFAULT_PREFERENCES_REPORT = "docs/reports/milestone_3.md"
 
 
 def demo(output_format: str) -> int:
@@ -129,6 +138,33 @@ def benchmark(
         print(json_benchmark(result), end="")
     else:
         print(markdown_benchmark(result), end="")
+    return 0
+
+
+def preferences(
+    input_path: str | None,
+    output_format: str,
+    output_path: str | None,
+    report_path: str | None,
+    min_score_margin: float,
+) -> int:
+    scenarios = _load_or_synthetic(input_path)
+    pairs = generate_preferences(scenarios, min_score_margin=min_score_margin)
+
+    if report_path:
+        generate_preference_report(pairs, report_path)
+        print(f"Generated Milestone 3 preference report at {report_path}")
+        return 0
+
+    if output_path:
+        save_preferences(output_path, pairs)
+        print(f"Exported {len(pairs)} preference pair(s) to {output_path}")
+        return 0
+
+    if output_format == "json":
+        print(json_preferences(pairs), end="")
+    else:
+        print(markdown_preferences(pairs), end="")
     return 0
 
 
@@ -249,6 +285,35 @@ def main() -> int:
         help="Directory for generated SVG report assets.",
     )
 
+    preferences_parser = subparsers.add_parser(
+        "preferences",
+        help="Generate metric-derived trajectory preference pairs.",
+    )
+    preferences_parser.add_argument(
+        "--input",
+        help="Scenario JSON path. Defaults to built-in synthetic scenarios.",
+    )
+    preferences_parser.add_argument(
+        "--format",
+        choices=("markdown", "json"),
+        default="markdown",
+        help="Output format when not writing a file or report.",
+    )
+    preferences_parser.add_argument(
+        "--output",
+        help=f"Optional JSON path to write, such as {DEFAULT_PREFERENCES_OUTPUT}.",
+    )
+    preferences_parser.add_argument(
+        "--report",
+        help=f"Optional Markdown report path to write, such as {DEFAULT_PREFERENCES_REPORT}.",
+    )
+    preferences_parser.add_argument(
+        "--min-score-margin",
+        type=float,
+        default=0.0,
+        help="Only emit pairs whose preferred score exceeds rejected score by this margin.",
+    )
+
     args = parser.parse_args()
     if args.command == "demo":
         return demo(output_format=args.format)
@@ -276,6 +341,14 @@ def main() -> int:
             output_format=args.format,
             report_path=args.report,
             assets_dir=args.assets_dir,
+        )
+    if args.command == "preferences":
+        return preferences(
+            input_path=args.input,
+            output_format=args.format,
+            output_path=args.output,
+            report_path=args.report,
+            min_score_margin=args.min_score_margin,
         )
 
     parser.print_help()

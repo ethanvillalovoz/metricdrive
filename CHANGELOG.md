@@ -9,3 +9,5 @@
   scenario export, and report generation.
 - Added Milestone 2 planner baselines, benchmark summaries, and planner
   comparison report generation.
+- Added Milestone 3 metric-derived preference pair generation, DPO-style JSON
+  export, and preference report generation.

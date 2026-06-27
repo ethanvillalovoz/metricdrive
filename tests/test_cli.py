@@ -35,6 +35,15 @@ class CliTests(unittest.TestCase):
         self.assertIn("Progress only", stdout.getvalue())
         self.assertIn("Metric rerank", stdout.getvalue())
 
+    def test_preferences_outputs_pair_table(self) -> None:
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            exit_code = main_from_args("preferences")
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("MetricDrive Preference Pairs", stdout.getvalue())
+        self.assertIn("metric_aligned_yield", stdout.getvalue())
+
 
 def main_from_args(*args: str) -> int:
     import sys

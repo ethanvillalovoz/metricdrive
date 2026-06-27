@@ -32,7 +32,7 @@ planning-alignment loop:
 
 ## Current Status
 
-Milestone 2 baseline planner benchmark.
+Milestone 3 metric-derived preference data.
 
 The repository currently includes:
 
@@ -48,15 +48,18 @@ The repository currently includes:
 - reference imitation, progress-only, and metric-rerank planner baselines,
 - aggregate/per-scenario benchmark reporting,
 - a generated Milestone 2 planner comparison report,
+- metric-derived preference pairs with score margins, reasons, and DPO-style
+  prompt/chosen/rejected records,
+- a generated Milestone 3 preference-data report,
 - CI for the initial Python package.
 
-The next implementation milestone is metric-derived preference generation and a
-small learned preference model.
+The next implementation milestone is a small learned preference model.
 
 See [docs/reports/milestone_1.md](docs/reports/milestone_1.md) for the current
 scenario gallery and score tables. See
 [docs/reports/milestone_2.md](docs/reports/milestone_2.md) for the baseline
-planner benchmark.
+planner benchmark. See [docs/reports/milestone_3.md](docs/reports/milestone_3.md)
+for the metric-derived preference dataset.
 
 ## Quick Start
 
@@ -105,6 +108,15 @@ Compare baseline planners:
 metricdrive benchmark
 metricdrive benchmark --format json
 metricdrive benchmark --report docs/reports/milestone_2.md --assets-dir docs/reports/assets
+```
+
+Generate metric-derived preference pairs:
+
+```bash
+metricdrive preferences
+metricdrive preferences --format json
+metricdrive preferences --output data/processed/preferences.json
+metricdrive preferences --report docs/reports/milestone_3.md
 ```
 
 ## Research Plan
