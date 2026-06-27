@@ -53,6 +53,15 @@ class CliTests(unittest.TestCase):
         self.assertIn("MetricDrive Learned Preference Model", stdout.getvalue())
         self.assertIn("Leave-one-scenario-out match rate", stdout.getvalue())
 
+    def test_ablations_outputs_objective_table(self) -> None:
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            exit_code = main_from_args("ablations", "--epochs", "80")
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("MetricDrive Objective Ablations", stdout.getvalue())
+        self.assertIn("Progress only", stdout.getvalue())
+
 
 def main_from_args(*args: str) -> int:
     import sys

@@ -13,3 +13,5 @@
   export, and preference report generation.
 - Added Milestone 3B learned preference reward modeling, leave-one-scenario-out
   evaluation, and learned-model report generation.
+- Added Milestone 3C objective ablations for learned reward terms, including
+  unsafe-selection and metric-score-gap analysis.

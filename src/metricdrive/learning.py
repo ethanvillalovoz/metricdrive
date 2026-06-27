@@ -79,6 +79,8 @@ class SelectionSummary:
     metric_match_rate: float
     unsafe_collision_count: int
     mean_selected_metric_score: float
+    mean_metric_best_score: float
+    mean_metric_score_gap: float
 
 
 @dataclass(frozen=True)
@@ -90,6 +92,80 @@ class LearningResult:
     heldout_selection_summary: SelectionSummary
     heldout_selection_runs: tuple[SelectionRun, ...]
     benchmark: BenchmarkResult
+
+
+@dataclass(frozen=True)
+class AblationSpec:
+    ablation_id: str
+    label: str
+    active_features: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class AblationRun:
+    ablation_id: str
+    label: str
+    active_features: tuple[str, ...]
+    removed_features: tuple[str, ...]
+    preference_fit: PreferenceFitSummary
+    training_selection_summary: SelectionSummary
+    heldout_selection_summary: SelectionSummary
+    heldout_selection_runs: tuple[SelectionRun, ...]
+
+
+@dataclass(frozen=True)
+class AblationStudy:
+    runs: tuple[AblationRun, ...]
+
+
+def _without(*feature_names: str) -> tuple[str, ...]:
+    removed = set(feature_names)
+    return tuple(name for name in FEATURE_NAMES if name not in removed)
+
+
+DEFAULT_ABLATION_SPECS = (
+    AblationSpec("full_model", "Full objective", FEATURE_NAMES),
+    AblationSpec(
+        "no_collision",
+        "No collision term",
+        _without("collision_clearance"),
+    ),
+    AblationSpec(
+        "no_vru_clearance",
+        "No VRU clearance",
+        _without("vru_clearance"),
+    ),
+    AblationSpec(
+        "no_progress",
+        "No progress",
+        _without("progress"),
+    ),
+    AblationSpec(
+        "no_route_error",
+        "No route error",
+        _without("route_error"),
+    ),
+    AblationSpec(
+        "no_imitation",
+        "No imitation",
+        _without("imitation"),
+    ),
+    AblationSpec(
+        "no_comfort",
+        "No comfort",
+        _without("comfort"),
+    ),
+    AblationSpec(
+        "progress_only",
+        "Progress only",
+        ("progress",),
+    ),
+    AblationSpec(
+        "safety_only",
+        "Safety only",
+        ("collision_clearance", "vru_clearance", "offroad"),
+    ),
+)
 
 
 def component_features(
@@ -107,9 +183,11 @@ def train_preference_model(
     epochs: int = 600,
     learning_rate: float = 0.2,
     l2: float = 0.001,
+    feature_names: tuple[str, ...] = FEATURE_NAMES,
 ) -> PreferenceRewardModel:
     """Train a non-negative linear reward model from pairwise preferences."""
 
+    active_features = _validated_features(feature_names)
     weights = {name: 0.0 for name in FEATURE_NAMES}
     pairs = _training_pairs(scenarios)
     for _ in range(epochs):
@@ -117,7 +195,7 @@ def train_preference_model(
             difference = _feature_difference(scenario, preferred, rejected)
             probability = _sigmoid(_dot(weights, difference))
             step_scale = 1.0 - probability
-            for name in FEATURE_NAMES:
+            for name in active_features:
                 updated = weights[name] + learning_rate * (
                     step_scale * difference[name] - l2 * weights[name]
                 )
@@ -166,6 +244,7 @@ def leave_one_scenario_out(
     epochs: int = 600,
     learning_rate: float = 0.2,
     l2: float = 0.001,
+    feature_names: tuple[str, ...] = FEATURE_NAMES,
 ) -> tuple[SelectionSummary, tuple[SelectionRun, ...]]:
     runs: list[SelectionRun] = []
     for heldout in scenarios:
@@ -179,6 +258,7 @@ def leave_one_scenario_out(
             epochs=epochs,
             learning_rate=learning_rate,
             l2=l2,
+            feature_names=feature_names,
         )
         runs.append(_selection_run(model, heldout))
     return _selection_summary(tuple(runs)), tuple(runs)
@@ -219,6 +299,46 @@ def run_learning_experiment(
     )
 
 
+def run_ablation_study(
+    scenarios: tuple[Scenario, ...],
+    specs: tuple[AblationSpec, ...] = DEFAULT_ABLATION_SPECS,
+    epochs: int = 80,
+    learning_rate: float = 0.2,
+    l2: float = 0.001,
+) -> AblationStudy:
+    runs: list[AblationRun] = []
+    for spec in specs:
+        model = train_preference_model(
+            scenarios,
+            epochs=epochs,
+            learning_rate=learning_rate,
+            l2=l2,
+            feature_names=spec.active_features,
+        )
+        preference_fit = evaluate_preference_fit(model, scenarios)
+        training_summary, _ = evaluate_selection(model, scenarios)
+        heldout_summary, heldout_runs = leave_one_scenario_out(
+            scenarios,
+            epochs=epochs,
+            learning_rate=learning_rate,
+            l2=l2,
+            feature_names=spec.active_features,
+        )
+        runs.append(
+            AblationRun(
+                ablation_id=spec.ablation_id,
+                label=spec.label,
+                active_features=spec.active_features,
+                removed_features=_removed_features(spec.active_features),
+                preference_fit=preference_fit,
+                training_selection_summary=training_summary,
+                heldout_selection_summary=heldout_summary,
+                heldout_selection_runs=heldout_runs,
+            )
+        )
+    return AblationStudy(runs=tuple(runs))
+
+
 def learning_payload(result: LearningResult) -> dict[str, object]:
     return {
         "format": "metricdrive.learning.v1",
@@ -239,6 +359,17 @@ def learning_payload(result: LearningResult) -> dict[str, object]:
 
 def json_learning(result: LearningResult) -> str:
     return json.dumps(learning_payload(result), indent=2) + "\n"
+
+
+def ablation_payload(study: AblationStudy) -> dict[str, object]:
+    return {
+        "format": "metricdrive.ablation_study.v1",
+        "runs": [asdict(run) for run in study.runs],
+    }
+
+
+def json_ablation_study(study: AblationStudy) -> str:
+    return json.dumps(ablation_payload(study), indent=2) + "\n"
 
 
 def markdown_learning(result: LearningResult) -> str:
@@ -275,6 +406,33 @@ def markdown_learning(result: LearningResult) -> str:
     )
     for run in result.heldout_selection_runs:
         lines.append(_selection_row(run))
+    return "\n".join(lines) + "\n"
+
+
+def markdown_ablation_study(study: AblationStudy) -> str:
+    lines = [
+        "# MetricDrive Objective Ablations",
+        "",
+        "| Objective | Active features | Held-out match | Unsafe | Mean score | Score gap | Pairwise fit |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    for run in study.runs:
+        lines.append(_ablation_summary_row(run))
+
+    lines.extend(
+        (
+            "",
+            "## Held-Out Failures",
+            "",
+            "| Objective | Scenario | Selected | Metric best | Score gap | Unsafe |",
+            "| --- | --- | --- | --- | ---: | --- |",
+        )
+    )
+    failures = _ablation_failures(study)
+    if failures:
+        lines.extend(failures)
+    else:
+        lines.append("| none | n/a | n/a | n/a | 0.000 | no |")
     return "\n".join(lines) + "\n"
 
 
@@ -363,7 +521,86 @@ def generate_learning_report(
             "",
             "## Next Experiment",
             "",
-            "Add objective ablations and harder generated negatives, then scale the same preference-learning interface to optional public motion-data slices.",
+            "Use the objective ablation study to guide harder generated negatives that force richer tradeoffs between safety, progress, comfort, and route adherence.",
+            "",
+        )
+    )
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text("\n".join(lines), encoding="utf-8")
+
+
+def generate_ablation_report(
+    scenarios: tuple[Scenario, ...],
+    output_path: str | Path,
+    epochs: int = 80,
+    learning_rate: float = 0.2,
+    l2: float = 0.001,
+) -> None:
+    study = run_ablation_study(
+        scenarios,
+        epochs=epochs,
+        learning_rate=learning_rate,
+        l2=l2,
+    )
+    output = Path(output_path)
+    lines = [
+        "# Milestone 3C: Objective Ablation Study",
+        "",
+        "MetricDrive now tests which objective terms matter by retraining the learned preference model with individual metric components removed or isolated. The same leave-one-scenario-out protocol is used for every ablation.",
+        "",
+        "## Method",
+        "",
+        "- Start from the learned Bradley-Terry preference reward model.",
+        "- Retrain with selected metric components removed or isolated.",
+        "- Evaluate held-out scenario selections against the metric-rerank choice.",
+        "- Track unsafe selections and metric-score gaps to expose failure modes.",
+        "",
+        "## Summary",
+        "",
+        "| Objective | Active features | Held-out match | Unsafe | Mean score | Score gap | Pairwise fit |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    for run in study.runs:
+        lines.append(_ablation_summary_row(run))
+
+    lines.extend(
+        (
+            "",
+            "## Held-Out Failure Cases",
+            "",
+            "| Objective | Scenario | Selected | Metric best | Score gap | Unsafe |",
+            "| --- | --- | --- | --- | ---: | --- |",
+        )
+    )
+    failures = _ablation_failures(study)
+    if failures:
+        lines.extend(failures)
+    else:
+        lines.append("| none | n/a | n/a | n/a | 0.000 | no |")
+
+    no_collision = _ablation_by_id(study, "no_collision").heldout_selection_summary
+    progress_only = _ablation_by_id(study, "progress_only").heldout_selection_summary
+    safety_only = _ablation_by_id(study, "safety_only").heldout_selection_summary
+    lines.extend(
+        (
+            "",
+            "## Takeaway",
+            "",
+            (
+                "Collision clearance is the most brittle single term: removing it "
+                f"leaves {no_collision.unsafe_collision_count} unsafe held-out "
+                f"selection and drops match rate to {no_collision.metric_match_rate:.3f}. "
+                "A progress-only objective recreates the dangerous baseline, "
+                f"selecting unsafe trajectories in {progress_only.unsafe_collision_count} "
+                f"of {progress_only.scenario_count} held-out scenarios. Safety-only "
+                f"avoids collisions but matches only {safety_only.metric_match_count}/"
+                f"{safety_only.scenario_count} metric-rerank choices, showing why "
+                "the aligned objective needs both safety and progress terms."
+            ),
+            "",
+            "## Next Experiment",
+            "",
+            "Generate harder negatives that force tradeoffs between progress, collision clearance, vulnerable-road-user clearance, comfort, and route adherence.",
             "",
         )
     )
@@ -424,12 +661,16 @@ def _selection_run(model: PreferenceRewardModel, scenario: Scenario) -> Selectio
 
 def _selection_summary(runs: tuple[SelectionRun, ...]) -> SelectionSummary:
     match_count = sum(run.matched_metric_best for run in runs)
+    mean_selected_score = _mean(run.selected_metric_score for run in runs)
+    mean_metric_best_score = _mean(run.metric_best_score for run in runs)
     return SelectionSummary(
         scenario_count=len(runs),
         metric_match_count=match_count,
         metric_match_rate=_ratio(match_count, len(runs)),
         unsafe_collision_count=sum(run.unsafe_collision for run in runs),
-        mean_selected_metric_score=_mean(run.selected_metric_score for run in runs),
+        mean_selected_metric_score=mean_selected_score,
+        mean_metric_best_score=mean_metric_best_score,
+        mean_metric_score_gap=round(mean_selected_score - mean_metric_best_score, 3),
     )
 
 
@@ -471,3 +712,60 @@ def _ratio(numerator: int, denominator: int) -> float:
 
 def _optional(value: float | None) -> str:
     return "n/a" if value is None else f"{value:.3f}"
+
+
+def _validated_features(feature_names: tuple[str, ...]) -> tuple[str, ...]:
+    unknown = tuple(name for name in feature_names if name not in FEATURE_NAMES)
+    if unknown:
+        raise ValueError(f"Unknown feature name(s): {', '.join(unknown)}")
+    if not feature_names:
+        raise ValueError("At least one active feature is required.")
+    return tuple(dict.fromkeys(feature_names))
+
+
+def _removed_features(active_features: tuple[str, ...]) -> tuple[str, ...]:
+    active = set(active_features)
+    return tuple(name for name in FEATURE_NAMES if name not in active)
+
+
+def _feature_list(feature_names: tuple[str, ...]) -> str:
+    return ", ".join(feature_names)
+
+
+def _ablation_summary_row(run: AblationRun) -> str:
+    heldout = run.heldout_selection_summary
+    fit = run.preference_fit
+    return (
+        "| "
+        f"{run.label} | {_feature_list(run.active_features)} | "
+        f"{heldout.metric_match_count}/{heldout.scenario_count} "
+        f"({heldout.metric_match_rate:.3f}) | "
+        f"{heldout.unsafe_collision_count} | "
+        f"{heldout.mean_selected_metric_score:.3f} | "
+        f"{heldout.mean_metric_score_gap:.3f} | "
+        f"{fit.correct_pair_count}/{fit.pair_count} ({fit.pairwise_accuracy:.3f}) |"
+    )
+
+
+def _ablation_failures(study: AblationStudy) -> list[str]:
+    rows: list[str] = []
+    for run in study.runs:
+        for selection in run.heldout_selection_runs:
+            if selection.matched_metric_best and not selection.unsafe_collision:
+                continue
+            rows.append(
+                "| "
+                f"{run.label} | {selection.scenario_id} | "
+                f"`{selection.selected_trajectory_id}` | "
+                f"`{selection.metric_best_trajectory_id}` | "
+                f"{selection.selected_metric_score - selection.metric_best_score:.3f} | "
+                f"{'yes' if selection.unsafe_collision else 'no'} |"
+            )
+    return rows
+
+
+def _ablation_by_id(study: AblationStudy, ablation_id: str) -> AblationRun:
+    for run in study.runs:
+        if run.ablation_id == ablation_id:
+            return run
+    raise ValueError(f"Missing ablation result: {ablation_id}")

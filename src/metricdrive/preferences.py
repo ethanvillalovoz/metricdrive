@@ -198,7 +198,7 @@ def generate_preference_report(
             "",
             "## Next Experiment",
             "",
-            "Train a lightweight preference model that predicts the preferred trajectory from metric-derived pairs, then compare its selections with hard-coded metric reranking.",
+            "Train and ablate a lightweight preference model that predicts preferred trajectories from metric-derived pairs, then scale the setup with harder generated negatives.",
             "",
         )
     )

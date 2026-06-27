@@ -60,4 +60,4 @@ Each JSON pair includes `prompt`, `chosen`, and `rejected` fields, so it can be 
 
 ## Next Experiment
 
-Train a lightweight preference model that predicts the preferred trajectory from metric-derived pairs, then compare its selections with hard-coded metric reranking.
+Train and ablate a lightweight preference model that predicts preferred trajectories from metric-derived pairs, then scale the setup with harder generated negatives.

@@ -56,4 +56,4 @@ The learned preference planner recovers the metric-rerank choices on the control
 
 ## Next Experiment
 
-Add objective ablations and harder generated negatives, then scale the same preference-learning interface to optional public motion-data slices.
+Use the objective ablation study to guide harder generated negatives that force richer tradeoffs between safety, progress, comfort, and route adherence.

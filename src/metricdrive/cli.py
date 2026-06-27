@@ -15,9 +15,13 @@ from metricdrive.benchmark import (
 from metricdrive.demo import built_in_demo_scenario, ranked_demo_scores
 from metricdrive.io import load_scenarios, save_scenarios
 from metricdrive.learning import (
+    generate_ablation_report,
     generate_learning_report,
+    json_ablation_study,
     json_learning,
+    markdown_ablation_study,
     markdown_learning,
+    run_ablation_study,
     run_learning_experiment,
 )
 from metricdrive.preferences import (
@@ -39,6 +43,7 @@ DEFAULT_BENCHMARK_OUTPUT = "docs/reports/milestone_2.md"
 DEFAULT_PREFERENCES_OUTPUT = "data/processed/preferences.json"
 DEFAULT_PREFERENCES_REPORT = "docs/reports/milestone_3.md"
 DEFAULT_LEARNING_REPORT = "docs/reports/milestone_3_learned_model.md"
+DEFAULT_ABLATION_REPORT = "docs/reports/milestone_3_ablation_study.md"
 
 
 def demo(output_format: str) -> int:
@@ -206,6 +211,40 @@ def learned(
         print(json_learning(result), end="")
     else:
         print(markdown_learning(result), end="")
+    return 0
+
+
+def ablations(
+    input_path: str | None,
+    output_format: str,
+    report_path: str | None,
+    epochs: int,
+    learning_rate: float,
+    l2: float,
+) -> int:
+    scenarios = _load_or_synthetic(input_path)
+
+    if report_path:
+        generate_ablation_report(
+            scenarios=scenarios,
+            output_path=report_path,
+            epochs=epochs,
+            learning_rate=learning_rate,
+            l2=l2,
+        )
+        print(f"Generated ablation report at {report_path}")
+        return 0
+
+    study = run_ablation_study(
+        scenarios=scenarios,
+        epochs=epochs,
+        learning_rate=learning_rate,
+        l2=l2,
+    )
+    if output_format == "json":
+        print(json_ablation_study(study), end="")
+    else:
+        print(markdown_ablation_study(study), end="")
     return 0
 
 
@@ -392,6 +431,43 @@ def main() -> int:
         help="L2 weight decay.",
     )
 
+    ablations_parser = subparsers.add_parser(
+        "ablations",
+        help="Run objective ablations for the learned preference model.",
+    )
+    ablations_parser.add_argument(
+        "--input",
+        help="Scenario JSON path. Defaults to built-in synthetic scenarios.",
+    )
+    ablations_parser.add_argument(
+        "--format",
+        choices=("markdown", "json"),
+        default="markdown",
+        help="Output format when not writing a report.",
+    )
+    ablations_parser.add_argument(
+        "--report",
+        help=f"Optional Markdown report path to write, such as {DEFAULT_ABLATION_REPORT}.",
+    )
+    ablations_parser.add_argument(
+        "--epochs",
+        type=int,
+        default=80,
+        help="Preference-training epochs per ablation.",
+    )
+    ablations_parser.add_argument(
+        "--learning-rate",
+        type=float,
+        default=0.2,
+        help="Pairwise logistic learning rate.",
+    )
+    ablations_parser.add_argument(
+        "--l2",
+        type=float,
+        default=0.001,
+        help="L2 weight decay.",
+    )
+
     args = parser.parse_args()
     if args.command == "demo":
         return demo(output_format=args.format)
@@ -430,6 +506,15 @@ def main() -> int:
         )
     if args.command == "learned":
         return learned(
+            input_path=args.input,
+            output_format=args.format,
+            report_path=args.report,
+            epochs=args.epochs,
+            learning_rate=args.learning_rate,
+            l2=args.l2,
+        )
+    if args.command == "ablations":
+        return ablations(
             input_path=args.input,
             output_format=args.format,
             report_path=args.report,

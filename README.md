@@ -32,7 +32,7 @@ planning-alignment loop:
 
 ## Current Status
 
-Milestone 3B learned preference model.
+Milestone 3C objective ablation study.
 
 The repository currently includes:
 
@@ -55,10 +55,13 @@ The repository currently includes:
   preferences,
 - leave-one-scenario-out learned-model evaluation,
 - a generated Milestone 3B learned preference model report,
+- objective ablations showing which metric terms prevent unsafe or overly
+  cautious selections,
+- a generated Milestone 3C objective ablation report,
 - CI for the initial Python package.
 
-The next implementation milestone is objective ablations and harder generated
-negatives.
+The next implementation milestone is harder generated negatives that stress
+tradeoffs between safety, progress, comfort, and route adherence.
 
 See [docs/reports/milestone_1.md](docs/reports/milestone_1.md) for the current
 scenario gallery and score tables. See
@@ -66,7 +69,9 @@ scenario gallery and score tables. See
 planner benchmark. See [docs/reports/milestone_3.md](docs/reports/milestone_3.md)
 for the metric-derived preference dataset. See
 [docs/reports/milestone_3_learned_model.md](docs/reports/milestone_3_learned_model.md)
-for the learned preference model evaluation.
+for the learned preference model evaluation. See
+[docs/reports/milestone_3_ablation_study.md](docs/reports/milestone_3_ablation_study.md)
+for the objective ablation study.
 
 ## Quick Start
 
@@ -132,6 +137,14 @@ Train and evaluate the learned preference model:
 metricdrive learned
 metricdrive learned --format json
 metricdrive learned --report docs/reports/milestone_3_learned_model.md
+```
+
+Run objective ablations:
+
+```bash
+metricdrive ablations
+metricdrive ablations --format json
+metricdrive ablations --report docs/reports/milestone_3_ablation_study.md
 ```
 
 ## Research Plan

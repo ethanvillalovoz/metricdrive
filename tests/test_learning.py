@@ -7,8 +7,11 @@ from pathlib import Path
 
 from metricdrive.learning import (
     LearnedPreferencePlanner,
+    generate_ablation_report,
     generate_learning_report,
+    json_ablation_study,
     json_learning,
+    run_ablation_study,
     run_learning_experiment,
     train_preference_model,
 )
@@ -62,6 +65,49 @@ class LearningTests(unittest.TestCase):
 
             self.assertTrue(output.exists())
             self.assertIn("Learned Preference Model", output.read_text(encoding="utf-8"))
+
+    def test_ablation_study_exposes_objective_failures(self) -> None:
+        study = run_ablation_study(synthetic_scenarios(), epochs=80)
+        runs = {run.ablation_id: run for run in study.runs}
+
+        self.assertEqual(
+            runs["full_model"].heldout_selection_summary.metric_match_count,
+            6,
+        )
+        self.assertGreater(
+            runs["no_collision"].heldout_selection_summary.unsafe_collision_count,
+            0,
+        )
+        self.assertEqual(
+            runs["progress_only"].heldout_selection_summary.unsafe_collision_count,
+            6,
+        )
+        self.assertEqual(
+            runs["safety_only"].heldout_selection_summary.unsafe_collision_count,
+            0,
+        )
+        self.assertLess(
+            runs["safety_only"].heldout_selection_summary.metric_match_count,
+            runs["full_model"].heldout_selection_summary.metric_match_count,
+        )
+
+    def test_json_ablation_study_has_stable_format(self) -> None:
+        payload = json.loads(
+            json_ablation_study(run_ablation_study(synthetic_scenarios(), epochs=80))
+        )
+
+        self.assertEqual(payload["format"], "metricdrive.ablation_study.v1")
+        self.assertIn("full_model", {row["ablation_id"] for row in payload["runs"]})
+        self.assertIn("progress_only", {row["ablation_id"] for row in payload["runs"]})
+
+    def test_generate_ablation_report_writes_markdown(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output = Path(tmpdir) / "milestone_3_ablation_study.md"
+
+            generate_ablation_report(synthetic_scenarios(), output, epochs=80)
+
+            self.assertTrue(output.exists())
+            self.assertIn("Objective Ablation Study", output.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":
