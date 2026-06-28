@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If MetricDrive helps your work, please cite it as below."
+title: "MetricDrive: Metric-Aligned Planning Lab for Autonomous-Driving Trajectory Choices"
+type: software
+authors:
+  - family-names: Villalovoz
+    given-names: Ethan
+repository-code: "https://github.com/ethanvillalovoz/metricdrive"
+url: "https://ethanvillalovoz.github.io/metricdrive/"
+license: MIT
+version: 0.1.0
+abstract: "A public, laptop-scale autonomous-driving planning lab for metric-derived trajectory preferences, learned rewards, hard-negative stress tests, VLM-style planning rows, and metric-reward policy optimization analogues."

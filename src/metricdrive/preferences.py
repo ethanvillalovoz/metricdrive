@@ -198,7 +198,7 @@ def generate_preference_report(
             "",
             "## Next Experiment",
             "",
-            "Train and ablate a lightweight preference model that predicts preferred trajectories from metric-derived pairs, then scale the setup with harder generated negatives.",
+            "Export these metric-derived pairs as public-safe VLM planning rows, then compare token-match proxies against metric-reward policy optimization.",
             "",
         )
     )

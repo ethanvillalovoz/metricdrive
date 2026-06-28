@@ -2,8 +2,8 @@
 
 ## Title
 
-Metric-derived preference alignment for long-tail autonomous-driving trajectory
-planning.
+Metric-derived preference and reward alignment for long-tail autonomous-driving
+trajectory planning.
 
 ## Research Question
 
@@ -19,8 +19,9 @@ trajectories can differ from the log, and a log-like trajectory can still score
 poorly under collision, route, comfort, or vulnerable-road-user metrics.
 
 MetricDrive tests a public, laptop-scale version of metric-aligned planning:
-convert scenario metrics into trajectory preferences, then evaluate whether a
-planner trained with those preferences improves safety-relevant behavior.
+convert scenario metrics into trajectory preferences, train a lightweight reward
+model, export VLM-style planning examples, and evaluate whether a reward-aligned
+policy improves safety-relevant behavior.
 
 ## Hypothesis
 
@@ -50,7 +51,9 @@ Milestone models:
 2. Imitation baseline over reference trajectories.
 3. Metric-reranked candidate planner.
 4. Preference-aligned planner trained from metric-ranked trajectory pairs.
-5. Optional meta-action planner with verifiable intermediate actions.
+5. VLM-style prompt/chosen/rejected planning examples.
+6. Meta-action planner with verifiable intermediate actions.
+7. Tiny reward-optimization analogue over candidate policies.
 
 ## Metrics
 
@@ -79,6 +82,7 @@ Required ablations:
 - remove VRU clearance term
 - remove comfort term
 - compare metric reranking vs learned preference alignment
+- compare token-match/progress proxies against metric-reward optimization
 - evaluate by scenario category, not only aggregate score
 
 ## Success Criteria

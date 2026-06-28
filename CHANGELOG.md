@@ -17,3 +17,9 @@
   unsafe-selection and metric-score-gap analysis.
 - Added Milestone 3D hard-negative trajectory generation, augmented preference
   stress testing, and report generation.
+- Added a static MetricDrive Explorer demo export for GitHub Pages.
+- Added public-safe VLM planning examples with verifiable meta-actions.
+- Added a tiny metric-reward RL alignment analogue over trajectory candidates.
+- Added recruiter-facing repository polish: README hero, portfolio report,
+  recruiting packet, citation metadata, release notes, Pages workflow, and
+  GitHub metadata guidance.

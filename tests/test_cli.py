@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import io
+import tempfile
 import unittest
 from contextlib import redirect_stdout
+from pathlib import Path
 
 from metricdrive.cli import main
 
@@ -70,6 +72,42 @@ class CliTests(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertIn("MetricDrive Hard Negative Stress Test", stdout.getvalue())
         self.assertIn("generated_progress_pressure", stdout.getvalue())
+
+    def test_export_demo_writes_static_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output = Path(tmpdir) / "demo"
+            stdout = io.StringIO()
+
+            with redirect_stdout(stdout):
+                exit_code = main_from_args(
+                    "export-demo",
+                    "--output",
+                    str(output),
+                    "--epochs",
+                    "5",
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertTrue((output / "index.html").exists())
+            self.assertIn("Generated MetricDrive static demo", stdout.getvalue())
+
+    def test_vlm_examples_outputs_jsonl(self) -> None:
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            exit_code = main_from_args("vlm-examples", "--limit", "2")
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("vlm_0001", stdout.getvalue())
+        self.assertIn("preferred_meta_action", stdout.getvalue())
+
+    def test_rl_align_outputs_policy_summary(self) -> None:
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            exit_code = main_from_args("rl-align", "--epochs", "10")
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("MetricDrive RL Alignment Analogue", stdout.getvalue())
+        self.assertIn("Metric-RL aligned policy", stdout.getvalue())
 
 
 def main_from_args(*args: str) -> int:

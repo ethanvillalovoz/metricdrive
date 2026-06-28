@@ -1,216 +1,142 @@
 # MetricDrive
 
-MetricDrive is a research-oriented autonomous-driving planning project about
-training planners toward driving metrics, not only logged-trajectory imitation.
+[![CI](https://github.com/ethanvillalovoz/metricdrive/actions/workflows/ci.yml/badge.svg)](https://github.com/ethanvillalovoz/metricdrive/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-0f172a.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-2563eb.svg)](pyproject.toml)
 
-The core question:
+MetricDrive is a metric-aligned planning lab for autonomous-driving trajectory
+choices. It turns long-tail driving scenarios into candidate trajectories,
+interpretable planning metrics, preference rows, learned reward selections,
+hard-negative stress tests, VLM-style planning examples, and a tiny
+metric-reward post-training analogue.
 
-> When the logged human trajectory is not the only acceptable future, can
-> metric-derived preferences teach a planner to choose safer long-tail
-> trajectories?
+- **Static demo:** [MetricDrive Explorer](https://ethanvillalovoz.github.io/metricdrive/)
+- **Local demo files:** [docs/demo](docs/demo/)
+- **Portfolio report:** [docs/reports/portfolio_report.md](docs/reports/portfolio_report.md)
+- **Recruiting packet:** [docs/recruiting_packet.md](docs/recruiting_packet.md)
 
-This repository starts as a laptop-scale, public-data research artifact. It is
-inspired by public work on multimodal/VLM driving planners, preference-aligned
-planning, and Waymo-style scenario evaluation, but it is independent and is not
-affiliated with Waymo.
+![MetricDrive Explorer preview](docs/demo/assets/metricdrive-explorer.svg)
+
+MetricDrive is Waymo-aligned in topic, but independent in implementation. It is
+inspired by public research on multimodal/VLM driving planners, planning-metric
+evaluation, preference alignment, and reward post-training. It does not use
+private company data or claim affiliation with Waymo.
 
 ## Why This Exists
 
-Pure imitation can make a planner good at matching logged trajectories while
-still under-optimizing the behavior people actually care about: avoiding
-collisions, respecting route intent, yielding to vulnerable road users, staying
-comfortable, and making progress.
+Autonomous-driving planners can look good under trajectory imitation while still
+making the wrong tradeoff: pressing through a pedestrian crossing, squeezing a
+merge, clipping a blocked lane, or over-braking when smoother safe progress is
+available.
 
-MetricDrive is designed to test a smaller, reproducible version of the modern
-planning-alignment loop:
+MetricDrive tests a small public analogue of a modern planning-alignment loop:
 
-1. Represent a driving scene as a bird's-eye-view state and structured prompt.
-2. Produce future ego trajectory candidates.
-3. Score candidates with interpretable planning metrics.
-4. Convert metric rankings into trajectory preferences.
-5. Compare imitation-only planning against metric-preference alignment.
+1. Represent the driving scene and candidate future ego trajectories.
+2. Score candidates with transparent planning metrics.
+3. Convert metric rankings into preference pairs.
+4. Train a lightweight reward model from those preferences.
+5. Add hard negatives that expose brittle objective terms.
+6. Export VLM-style planning rows and optimize a tiny metric-reward policy.
 
-## Current Status
+## Why It Is Credible
 
-Milestone 3D hard negative stress test.
-
-The repository currently includes:
-
-- a one-page research spec,
-- related-work notes,
-- a staged roadmap,
-- data and reproducibility policy,
-- a tiny standard-library demo of metric-scored trajectory candidates,
-- six synthetic long-tail driving scenario families,
-- transparent planning metrics and candidate ranking,
-- SVG bird's-eye-view scenario rendering,
-- a generated Milestone 1 report,
-- reference imitation, progress-only, and metric-rerank planner baselines,
-- aggregate/per-scenario benchmark reporting,
-- a generated Milestone 2 planner comparison report,
-- metric-derived preference pairs with score margins, reasons, and DPO-style
-  prompt/chosen/rejected records,
-- a generated Milestone 3 preference-data report,
-- a learned preference reward model trained from pairwise trajectory
-  preferences,
-- leave-one-scenario-out learned-model evaluation,
-- a generated Milestone 3B learned preference model report,
-- objective ablations showing which metric terms prevent unsafe or overly
-  cautious selections,
-- a generated Milestone 3C objective ablation report,
-- generated hard-negative trajectory candidates that stress safety/progress
-  tradeoffs,
-- augmented preference-pair stress evaluation over 36 trajectory candidates,
-- a generated Milestone 3D hard negative stress-test report,
-- CI for the initial Python package.
-
-The next implementation milestone is verifiable meta-actions connected to
-trajectory candidates and metric checks.
-
-See [docs/reports/milestone_1.md](docs/reports/milestone_1.md) for the current
-scenario gallery and score tables. See
-[docs/reports/milestone_2.md](docs/reports/milestone_2.md) for the baseline
-planner benchmark. See [docs/reports/milestone_3.md](docs/reports/milestone_3.md)
-for the metric-derived preference dataset. See
-[docs/reports/milestone_3_learned_model.md](docs/reports/milestone_3_learned_model.md)
-for the learned preference model evaluation. See
-[docs/reports/milestone_3_ablation_study.md](docs/reports/milestone_3_ablation_study.md)
-for the objective ablation study. See
-[docs/reports/milestone_3_hard_negatives.md](docs/reports/milestone_3_hard_negatives.md)
-for the hard negative stress test.
+| Proof point | Current status |
+| --- | --- |
+| Working planning harness | Six long-tail scenarios, candidate trajectories, metrics, SVG rendering, CLI, tests |
+| Preference-alignment data | 90 metric-derived prompt/chosen/rejected rows with hard negatives |
+| Learned reward evaluation | 89/90 pairwise fit, 6/6 held-out metric-best recovery, zero unsafe held-out selections |
+| Stress testing | Hard-negative generation plus objective ablations that expose no-collision and progress-only failures |
+| VLM/RL interface | Public-safe VLM JSONL examples and a tiny metric-reward post-training analogue |
+| Public demo | Dependency-free GitHub Pages explorer generated from the same experiment data |
+| Repo quality | MIT license, CI, contribution docs, citation file, release checklist, recruiter metadata |
 
 ## Quick Start
 
 ```bash
+git clone https://github.com/ethanvillalovoz/metricdrive.git
+cd metricdrive
 python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install -e ".[dev]"
-metricdrive demo
+metricdrive hard-negatives
 python3 -m unittest discover
 ```
 
-The demo prints a small trajectory-ranking example using collision, progress,
-comfort, and vulnerable-road-user clearance terms. It is a smoke test for the
-evaluation vocabulary, not the final planner.
-
-## Milestone 1 Commands
-
-Generate the controlled synthetic scenario set:
+Preview the static explorer locally:
 
 ```bash
-metricdrive generate --output data/processed/synthetic_scenarios.json
+metricdrive export-demo --output docs/demo
+python3 -m http.server 8000 --directory docs
 ```
 
-Score built-in or saved scenarios:
+Then open `http://localhost:8000/`.
 
-```bash
-metricdrive score
-metricdrive score --input data/processed/synthetic_scenarios.json --format json
-```
+## Research Surface
 
-Render one scenario as SVG:
+| Command | What it shows |
+| --- | --- |
+| `metricdrive score` | Metric-ranked candidate trajectories for synthetic long-tail scenarios |
+| `metricdrive benchmark` | Imitation, progress-only, and metric-rerank planner baselines |
+| `metricdrive preferences` | Metric-derived DPO-style preference pairs |
+| `metricdrive learned` | Bradley-Terry learned reward model from trajectory preferences |
+| `metricdrive ablations` | Objective-term failures under held-out evaluation |
+| `metricdrive hard-negatives` | Generated trajectory negatives and stress-ablation results |
+| `metricdrive vlm-examples` | Public-safe VLM planning prompt/chosen/rejected examples |
+| `metricdrive rl-align` | Tiny metric-reward post-training analogue over candidate policies |
+| `metricdrive export-demo` | Static GitHub Pages explorer with visual evidence |
 
-```bash
-metricdrive render synthetic_pedestrian_crossing --output outputs/pedestrian_crossing.svg
-```
+## Current Results
 
-Generate the first milestone report and SVG gallery:
+The current public demo uses six synthetic long-tail scenario families and 36
+candidate trajectories after hard-negative augmentation.
 
-```bash
-metricdrive report --output docs/reports/milestone_1.md --assets-dir docs/reports/assets
-```
+| Experiment | Result |
+| --- | --- |
+| Hard-negative preference set | 18 original candidates to 36 total candidates, 90 preference pairs |
+| Learned reward on stress set | 89/90 pairwise preference fit |
+| Held-out learned reward | 6/6 metric-best recovery, 0 unsafe selections |
+| No-collision ablation | 2/6 held-out matches, 3 unsafe selections |
+| Progress-only objective | 1/6 held-out matches, 5 unsafe selections |
+| RL-aligned policy analogue | 6/6 metric-best recovery, 0 unsafe selections |
+| Token-match imitation proxy | 0/6 metric-best recovery, 6 unsafe selections |
 
-Compare baseline planners:
+## Public Evidence
 
-```bash
-metricdrive benchmark
-metricdrive benchmark --format json
-metricdrive benchmark --report docs/reports/milestone_2.md --assets-dir docs/reports/assets
-```
+- [MetricDrive Explorer demo source](docs/demo/)
+- [VLM planning JSONL examples](docs/examples/vlm_planning_examples.jsonl)
+- [Portfolio report](docs/reports/portfolio_report.md)
+- [Milestone 1: synthetic scenario core](docs/reports/milestone_1.md)
+- [Milestone 2: baseline planner benchmark](docs/reports/milestone_2.md)
+- [Milestone 3: metric-derived preferences](docs/reports/milestone_3.md)
+- [Milestone 3B: learned preference model](docs/reports/milestone_3_learned_model.md)
+- [Milestone 3C: objective ablations](docs/reports/milestone_3_ablation_study.md)
+- [Milestone 3D: hard negative stress test](docs/reports/milestone_3_hard_negatives.md)
+- [Research spec](docs/research_spec.md)
+- [Related-work notes](docs/related_work.md)
 
-Generate metric-derived preference pairs:
+## Why This Is Waymo-Relevant
 
-```bash
-metricdrive preferences
-metricdrive preferences --format json
-metricdrive preferences --output data/processed/preferences.json
-metricdrive preferences --report docs/reports/milestone_3.md
-```
+Waymo's public research ecosystem includes scenario evaluation, motion
+forecasting, simulation, multimodal planning, and safety-oriented metrics.
+MetricDrive focuses on a narrow public slice of that world: how a planner can
+prefer safer trajectory choices when logged imitation or progress alone is not
+the right objective.
 
-Train and evaluate the learned preference model:
-
-```bash
-metricdrive learned
-metricdrive learned --format json
-metricdrive learned --report docs/reports/milestone_3_learned_model.md
-```
-
-Run objective ablations:
-
-```bash
-metricdrive ablations
-metricdrive ablations --format json
-metricdrive ablations --report docs/reports/milestone_3_ablation_study.md
-```
-
-Generate and evaluate hard negative candidates:
-
-```bash
-metricdrive hard-negatives
-metricdrive hard-negatives --format json
-metricdrive hard-negatives --report docs/reports/milestone_3_hard_negatives.md
-```
-
-## Research Plan
-
-See [docs/research_spec.md](docs/research_spec.md) for the one-page plan.
-
-The intended experimental ladder:
-
-1. **Synthetic scenario core**: define scenarios, metrics, SVG rendering, and
-   report generation.
-2. **Imitation baseline**: train a planner to match reference future
-   trajectories.
-3. **Metric reranking**: sample candidate trajectories and choose the best one
-   under planning metrics.
-4. **Preference alignment**: create metric-derived preference pairs and train a
-   planner or reward model to prefer safer candidates.
-5. **Verifiable meta-actions**: add intermediate actions such as
-   `YIELD_TO_VRU`, `SLOW_FOR_CUT_IN`, and `NUDGE_AROUND_OBSTACLE`, then verify
-   them against trajectory metrics.
-6. **Public-data integration**: add optional Waymo Open Motion / Waymax or
-   other public benchmark slices without requiring heavy downloads for the
-   default demo.
-
-## Planned Metrics
-
-- collision or overlap risk
-- off-road / drivable-area violation
-- route progress
-- route adherence
-- vulnerable-road-user clearance
-- comfort / jerk
-- kinematic feasibility
-- imitation distance to logged trajectory
-- long-tail scenario category coverage
+The project is deliberately laptop-scale. It is meant to be readable, runnable,
+and honest: controlled scenarios first, public-safe representations, visible
+failure modes, and no private data.
 
 ## Repository Layout
 
 ```text
-src/metricdrive/       Python package and CLI
-tests/                 Unit tests for the initial scaffold
-docs/                  Research spec, roadmap, related work, data policy
+src/metricdrive/       Python package, experiments, CLI, static demo exporter
+tests/                 Unit tests for metrics, learning, VLM rows, RL analogue, demo export
+docs/demo/             Generated static MetricDrive Explorer
+docs/reports/          Reproducible milestone and portfolio reports
+docs/                  Research spec, roadmap, metadata, data policy, release notes
 data/raw/              Local raw data mount point, ignored by git
 data/processed/        Local generated data, ignored by git
-notebooks/             Exploratory notebooks, kept out of the core path
-scripts/               Future experiment and data-prep entrypoints
 ```
-
-## Related Public Work
-
-MetricDrive is positioned around public research threads including EMMA,
-S4-Driver, WOD-E2E, Poutine, DriveMA, Waymax, NAVSIM, PlanT, VAD, and UniAD.
-Short notes live in [docs/related_work.md](docs/related_work.md).
 
 ## Non-Goals
 

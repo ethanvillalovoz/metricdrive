@@ -40,7 +40,8 @@ planner baselines with aggregate/per-scenario benchmark reporting.
 
 Status: preference pair generation, a lightweight learned preference reward
 model, objective ablations, and hard-negative stress testing are implemented.
-Verifiable meta-actions remain next.
+Verifiable meta-action labels are implemented for VLM examples; richer
+per-action checks remain next.
 
 ## Milestone 4: Verifiable Meta-Actions
 
@@ -48,6 +49,9 @@ Verifiable meta-actions remain next.
 - Map meta-actions to trajectory candidates.
 - Verify actions against scenario metrics.
 - Add visual failure analysis.
+
+Status: initial meta-action labels and VLM-style planning rows are implemented.
+The next step is richer action-specific verification and failure cards.
 
 ## Milestone 5: Public Data Integration
 
@@ -62,3 +66,7 @@ Verifiable meta-actions remain next.
 - Add dashboard or static gallery.
 - Add screenshots and failure cases.
 - Tag a public baseline release.
+
+Status: static MetricDrive Explorer, portfolio report, recruiting packet,
+GitHub metadata guidance, citation metadata, and release checklist are
+implemented. A public tag remains next.

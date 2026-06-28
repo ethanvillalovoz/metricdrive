@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "metricdrive"
 version = "0.1.0"
-description = "Metric-derived preference alignment experiments for autonomous-driving trajectory planning."
+description = "Metric-aligned autonomous-driving planning lab with preferences, learned rewards, hard negatives, VLM rows, and RL analogues."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [

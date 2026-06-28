@@ -23,3 +23,12 @@ jobs:
 
       - name: Run tests
         run: python -m unittest discover
+
+      - name: Smoke test public CLI commands
+        run: |
+          metricdrive score
+          metricdrive preferences
+          metricdrive hard-negatives --epochs 10
+          metricdrive vlm-examples --limit 2
+          metricdrive rl-align --epochs 10
+          metricdrive export-demo --output /tmp/metricdrive-demo --epochs 5

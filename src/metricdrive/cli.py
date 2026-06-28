@@ -13,6 +13,11 @@ from metricdrive.benchmark import (
     run_benchmark,
 )
 from metricdrive.demo import built_in_demo_scenario, ranked_demo_scores
+from metricdrive.demo_site import (
+    DEFAULT_DEMO_EPOCHS,
+    DEFAULT_DEMO_OUTPUT,
+    generate_demo_site,
+)
 from metricdrive.hard_negatives import (
     DEFAULT_HARD_NEGATIVE_EPOCHS,
     generate_hard_negative_report,
@@ -39,7 +44,21 @@ from metricdrive.preferences import (
     save_preferences,
 )
 from metricdrive.report import generate_milestone_report, json_scores, markdown_scores
+from metricdrive.rl_alignment import (
+    DEFAULT_RL_EPOCHS,
+    DEFAULT_RL_LEARNING_RATE,
+    json_rl_alignment,
+    markdown_rl_alignment,
+    run_rl_alignment,
+)
 from metricdrive.samples import synthetic_scenarios
+from metricdrive.vlm_examples import (
+    generate_vlm_examples,
+    json_vlm_examples,
+    jsonl_vlm_examples,
+    markdown_vlm_examples,
+    write_vlm_examples,
+)
 from metricdrive.visualize import scenario_svg
 
 
@@ -287,6 +306,75 @@ def hard_negatives(
         print(json_hard_negative_experiment(experiment), end="")
     else:
         print(markdown_hard_negative_experiment(experiment), end="")
+    return 0
+
+
+def export_demo(
+    input_path: str | None,
+    output_dir: str,
+    epochs: int,
+) -> int:
+    scenarios = _load_or_synthetic(input_path)
+    payload = generate_demo_site(
+        scenarios=scenarios,
+        output_dir=output_dir,
+        epochs=epochs,
+    )
+    print(
+        "Generated MetricDrive static demo at "
+        f"{output_dir} with {payload['summary']['candidate_count']} candidate(s)"
+    )
+    return 0
+
+
+def vlm_examples(
+    input_path: str | None,
+    output_format: str,
+    output_path: str | None,
+    limit: int | None,
+    min_score_margin: float,
+    no_hard_negatives: bool,
+) -> int:
+    scenarios = _load_or_synthetic(input_path)
+    examples = generate_vlm_examples(
+        scenarios,
+        include_hard_negatives=not no_hard_negatives,
+        min_score_margin=min_score_margin,
+    )
+    shown = examples if limit is None else examples[:limit]
+
+    if output_path:
+        write_vlm_examples(output_path, shown, output_format=output_format)
+        print(f"Exported {len(shown)} VLM planning example(s) to {output_path}")
+        return 0
+
+    if output_format == "json":
+        print(json_vlm_examples(shown), end="")
+    elif output_format == "markdown":
+        print(markdown_vlm_examples(shown, limit=None), end="")
+    else:
+        print(jsonl_vlm_examples(shown), end="")
+    return 0
+
+
+def rl_align(
+    input_path: str | None,
+    output_format: str,
+    epochs: int,
+    learning_rate: float,
+    no_hard_negatives: bool,
+) -> int:
+    scenarios = _load_or_synthetic(input_path)
+    result = run_rl_alignment(
+        scenarios,
+        epochs=epochs,
+        learning_rate=learning_rate,
+        include_hard_negatives=not no_hard_negatives,
+    )
+    if output_format == "json":
+        print(json_rl_alignment(result), end="")
+    else:
+        print(markdown_rl_alignment(result), end="")
     return 0
 
 
@@ -547,7 +635,97 @@ def main() -> int:
         help="L2 weight decay.",
     )
 
+    export_demo_parser = subparsers.add_parser(
+        "export-demo",
+        help="Export the static GitHub Pages demo.",
+    )
+    export_demo_parser.add_argument(
+        "--input",
+        help="Scenario JSON path. Defaults to built-in synthetic scenarios.",
+    )
+    export_demo_parser.add_argument(
+        "--output",
+        default=DEFAULT_DEMO_OUTPUT,
+        help="Static demo directory to write.",
+    )
+    export_demo_parser.add_argument(
+        "--epochs",
+        type=int,
+        default=DEFAULT_DEMO_EPOCHS,
+        help="Training epochs for generated demo summaries.",
+    )
+
+    vlm_examples_parser = subparsers.add_parser(
+        "vlm-examples",
+        help="Emit public-safe VLM planning preference examples.",
+    )
+    vlm_examples_parser.add_argument(
+        "--input",
+        help="Scenario JSON path. Defaults to built-in synthetic scenarios.",
+    )
+    vlm_examples_parser.add_argument(
+        "--format",
+        choices=("jsonl", "json", "markdown"),
+        default="jsonl",
+        help="Output format.",
+    )
+    vlm_examples_parser.add_argument(
+        "--output",
+        help="Optional path to write examples.",
+    )
+    vlm_examples_parser.add_argument(
+        "--limit",
+        type=int,
+        default=12,
+        help="Maximum examples to emit. Use 0 for all examples.",
+    )
+    vlm_examples_parser.add_argument(
+        "--min-score-margin",
+        type=float,
+        default=0.0,
+        help="Only emit examples whose chosen score exceeds rejected score by this margin.",
+    )
+    vlm_examples_parser.add_argument(
+        "--no-hard-negatives",
+        action="store_true",
+        help="Use only original hand-authored candidates.",
+    )
+
+    rl_align_parser = subparsers.add_parser(
+        "rl-align",
+        help="Run a tiny metric-reward post-training analogue.",
+    )
+    rl_align_parser.add_argument(
+        "--input",
+        help="Scenario JSON path. Defaults to built-in synthetic scenarios.",
+    )
+    rl_align_parser.add_argument(
+        "--format",
+        choices=("markdown", "json"),
+        default="markdown",
+        help="Output format.",
+    )
+    rl_align_parser.add_argument(
+        "--epochs",
+        type=int,
+        default=DEFAULT_RL_EPOCHS,
+        help="Policy optimization epochs.",
+    )
+    rl_align_parser.add_argument(
+        "--learning-rate",
+        type=float,
+        default=DEFAULT_RL_LEARNING_RATE,
+        help="Policy optimization learning rate.",
+    )
+    rl_align_parser.add_argument(
+        "--no-hard-negatives",
+        action="store_true",
+        help="Use only original hand-authored candidates.",
+    )
+
     args = parser.parse_args()
+    if hasattr(args, "limit") and args.limit == 0:
+        args.limit = None
     if args.command == "demo":
         return demo(output_format=args.format)
     if args.command == "spec":
@@ -609,6 +787,29 @@ def main() -> int:
             epochs=args.epochs,
             learning_rate=args.learning_rate,
             l2=args.l2,
+        )
+    if args.command == "export-demo":
+        return export_demo(
+            input_path=args.input,
+            output_dir=args.output,
+            epochs=args.epochs,
+        )
+    if args.command == "vlm-examples":
+        return vlm_examples(
+            input_path=args.input,
+            output_format=args.format,
+            output_path=args.output,
+            limit=args.limit,
+            min_score_margin=args.min_score_margin,
+            no_hard_negatives=args.no_hard_negatives,
+        )
+    if args.command == "rl-align":
+        return rl_align(
+            input_path=args.input,
+            output_format=args.format,
+            epochs=args.epochs,
+            learning_rate=args.learning_rate,
+            no_hard_negatives=args.no_hard_negatives,
         )
 
     parser.print_help()
