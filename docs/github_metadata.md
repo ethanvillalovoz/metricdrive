@@ -8,7 +8,7 @@ Waymo-aligned metric-reward planning lab for autonomous-driving trajectory choic
 
 ## Homepage
 
-https://ethanvillalovoz.github.io/metricdrive/
+https://ethanvillalovoz.com/metricdrive/
 
 ## Topics
 

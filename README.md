@@ -10,7 +10,7 @@ interpretable planning metrics, preference rows, learned reward selections,
 hard-negative stress tests, VLM-style planning examples, and a tiny
 metric-reward post-training analogue.
 
-- **Static demo:** [MetricDrive Explorer](https://ethanvillalovoz.github.io/metricdrive/)
+- **Static demo:** [MetricDrive Explorer](https://ethanvillalovoz.com/metricdrive/)
 - **Local demo files:** [docs/demo](docs/demo/)
 - **Portfolio report:** [docs/reports/portfolio_report.md](docs/reports/portfolio_report.md)
 - **Recruiting packet:** [docs/recruiting_packet.md](docs/recruiting_packet.md)
