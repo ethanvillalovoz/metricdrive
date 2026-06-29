@@ -25,6 +25,14 @@ class DemoSiteTests(unittest.TestCase):
                 "MetricDrive Explorer",
                 (output / "index.html").read_text(encoding="utf-8"),
             )
+            self.assertIn(
+                'rel="icon"',
+                (output / "index.html").read_text(encoding="utf-8"),
+            )
+            self.assertIn(
+                "ethanvillalovoz.com/metricdrive",
+                (output / "README.md").read_text(encoding="utf-8"),
+            )
 
 
 if __name__ == "__main__":
