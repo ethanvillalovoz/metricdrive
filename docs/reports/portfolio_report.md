@@ -17,7 +17,7 @@ stress tests, VLM-style planning rows, and a tiny reward-optimization analogue.
 | Stress testing | No-collision and progress-only ablations select unsafe candidates on the augmented set |
 | VLM interface | Public-safe planning examples with structured prompts, chosen/rejected JSON, and meta-actions |
 | RL analogue | Metric-reward policy optimization recovers 6/6 metric-best choices with zero unsafe selections |
-| Public demo | Static GitHub Pages explorer generated from reproducible experiment data |
+| Public demo | Static explorer generated from reproducible experiment data and mirrored at `ethanvillalovoz.com/metricdrive` |
 
 ## Why It Matters
 
@@ -52,9 +52,10 @@ metricdrive export-demo --output docs/demo
 python3 -m http.server 8000 --directory docs
 ```
 
-Open `http://localhost:8000/` to inspect scenarios, trajectory scores, learned
-reward selections, hard-negative ablations, VLM examples, and RL policy
-summaries.
+Open `http://localhost:8000/` locally, or use the public portfolio mirror at
+`https://ethanvillalovoz.com/metricdrive/`, to inspect scenarios, trajectory
+scores, learned reward selections, hard-negative ablations, VLM examples, and
+RL policy summaries.
 
 ## Public-Safe Positioning
 

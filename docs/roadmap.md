@@ -68,5 +68,5 @@ The next step is richer action-specific verification and failure cards.
 - Tag a public baseline release.
 
 Status: static MetricDrive Explorer, portfolio report, recruiting packet,
-GitHub metadata guidance, citation metadata, and release checklist are
-implemented. A public tag remains next.
+GitHub metadata guidance, citation metadata, and release notes are implemented.
+A public tag remains next.

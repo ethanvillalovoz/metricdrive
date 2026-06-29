@@ -10,6 +10,7 @@ interpretable planning metrics, preference rows, learned reward selections,
 hard-negative stress tests, VLM-style planning examples, and a tiny
 metric-reward post-training analogue.
 
+- **Live demo:** [ethanvillalovoz.com/metricdrive](https://ethanvillalovoz.com/metricdrive/)
 - **Static demo source:** [docs/demo](docs/demo/)
 - **Local preview:** `python3 -m http.server 8000 --directory docs`
 - **Portfolio report:** [docs/reports/portfolio_report.md](docs/reports/portfolio_report.md)
@@ -47,8 +48,8 @@ MetricDrive tests a small public analogue of a modern planning-alignment loop:
 | Learned reward evaluation | 89/90 pairwise fit, 6/6 held-out metric-best recovery, zero unsafe held-out selections |
 | Stress testing | Hard-negative generation plus objective ablations that expose no-collision and progress-only failures |
 | VLM/RL interface | Public-safe VLM JSONL examples and a tiny metric-reward post-training analogue |
-| Public demo | Dependency-free GitHub Pages explorer generated from the same experiment data |
-| Repo quality | MIT license, CI, contribution docs, citation file, release checklist, recruiter metadata |
+| Public demo | Dependency-free explorer generated from the same experiment data and mirrored at `ethanvillalovoz.com/metricdrive` |
+| Repo quality | MIT license, CI, contribution docs, citation file, release notes, recruiter metadata |
 
 ## Quick Start
 
@@ -83,7 +84,7 @@ Then open `http://localhost:8000/`.
 | `metricdrive hard-negatives` | Generated trajectory negatives and stress-ablation results |
 | `metricdrive vlm-examples` | Public-safe VLM planning prompt/chosen/rejected examples |
 | `metricdrive rl-align` | Tiny metric-reward post-training analogue over candidate policies |
-| `metricdrive export-demo` | Static GitHub Pages explorer with visual evidence |
+| `metricdrive export-demo` | Static explorer export with visual evidence |
 
 ## Current Results
 
@@ -102,6 +103,7 @@ candidate trajectories after hard-negative augmentation.
 
 ## Public Evidence
 
+- [Live MetricDrive Explorer](https://ethanvillalovoz.com/metricdrive/)
 - [MetricDrive Explorer demo source](docs/demo/)
 - [VLM planning JSONL examples](docs/examples/vlm_planning_examples.jsonl)
 - [Portfolio report](docs/reports/portfolio_report.md)

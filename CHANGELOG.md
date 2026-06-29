@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 - Unreleased
+## 0.1.0 - 2026-06-29
 
 - Initialized MetricDrive as a research-oriented planning-alignment repository.
 - Added research spec, related-work notes, roadmap, and data policy.
@@ -23,3 +23,5 @@
 - Added recruiter-facing repository polish: README hero, portfolio report,
   recruiting packet, citation metadata, release notes, Pages workflow, and
   GitHub metadata guidance.
+- Published the generated static demo to the portfolio route at
+  `https://ethanvillalovoz.com/metricdrive/`.

@@ -9,4 +9,5 @@ repository-code: "https://github.com/ethanvillalovoz/metricdrive"
 url: "https://github.com/ethanvillalovoz/metricdrive"
 license: MIT
 version: 0.1.0
+date-released: 2026-06-29
 abstract: "A public, laptop-scale autonomous-driving planning lab for metric-derived trajectory preferences, learned rewards, hard-negative stress tests, VLM-style planning rows, and metric-reward policy optimization analogues."

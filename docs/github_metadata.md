@@ -8,9 +8,7 @@ Waymo-aligned metric-reward planning lab for autonomous-driving trajectory choic
 
 ## Homepage
 
-Leave blank until the main site routes `/metricdrive/`, or use:
-
-https://github.com/ethanvillalovoz/metricdrive/tree/main/docs/demo
+https://ethanvillalovoz.com/metricdrive/
 
 ## Topics
 
@@ -22,10 +20,8 @@ https://github.com/ethanvillalovoz/metricdrive/tree/main/docs/demo
 - `preference-learning`
 - `reinforcement-learning`
 - `vision-language-models`
-- `vlm`
 - `reward-modeling`
 - `safety-evaluation`
-- `simulation`
 - `python`
 - `github-pages`
 - `portfolio-project`

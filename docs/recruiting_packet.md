@@ -41,6 +41,7 @@ post-training analogue.
 
 ## Public Links
 
+- Live demo: https://ethanvillalovoz.com/metricdrive/
 - Demo source: `docs/demo/`
 - Repository: https://github.com/ethanvillalovoz/metricdrive
 - Portfolio report: `docs/reports/portfolio_report.md`
